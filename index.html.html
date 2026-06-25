@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulation DPAE — Launchpad</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple-50: #EEEDFE; --purple-200: #AFA9EC; --purple-400: #7F77DD;
+    --purple-600: #534AB7; --purple-800: #3C3489; --purple-900: #26215C;
+    --teal-50: #E1F5EE; --teal-600: #0F6E56; --teal-800: #085041;
+    --amber-50: #FAEEDA; --amber-800: #633806;
+    --blue-50: #E6F1FB; --blue-800: #0C447C;
+    --gray-100: #D3D1C7; --gray-500: #5F5E5A; --gray-700: #444441;
+    --red-50: #FCEBEB; --red-700: #791F1F;
+    --bg: #F7F6F3; --surface: #FFFFFF; --text: #1A1A18;
+    --text-muted: #5F5E5A; --border: rgba(0,0,0,0.1); --radius: 10px; --radius-lg: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1A1A18; --surface: #252523; --text: #F0EFE8;
+      --text-muted: #B4B2A9; --border: rgba(255,255,255,0.1);
+      --purple-50: #2A2860; --purple-800: #AFA9EC; --purple-900: #CECBF6;
+      --teal-50: #04342C; --teal-800: #9FE1CB;
+      --amber-50: #412402; --amber-800: #FAC775;
+      --blue-50: #042C53; --blue-800: #85B7EB;
+    }
+  }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem 4rem; }
+  .container { max-width: 680px; margin: 0 auto; }
+  header { margin-bottom: 2.5rem; }
+  .logo { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.5rem; }
+  .logo-mark { width: 32px; height: 32px; background: var(--purple-600); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 18px; height: 18px; }
+  .logo-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); line-height: 1.2; margin-bottom: 6px; }
+  .subtitle { font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; }
+  .inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 480px) { .inputs-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .field input, .field select {
+    font-size: 15px; font-family: inherit; color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
+    outline: none; transition: border-color 0.15s; -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--purple-400); box-shadow: 0 0 0 3px var(--purple-50); }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer;
+  }
+  .dpae-banner { background: var(--purple-50); border: 1.5px solid var(--purple-200); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+  .dpae-banner-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--purple-600); margin-bottom: 4px; }
+  .dpae-banner-date { font-size: 28px; font-weight: 700; color: var(--purple-900); letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 4px; }
+  .dpae-banner-sub { font-size: 13px; color: var(--purple-800); }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+  .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .metric-value { font-size: 16px; font-weight: 600; color: var(--text); }
+  .metric-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: 1.5rem 0 0.75rem; }
+  .timeline { display: flex; flex-direction: column; position: relative; }
+  .timeline::before { content: ''; position: absolute; left: 15px; top: 8px; bottom: 8px; width: 1px; background: var(--border); }
+  .tl-item { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; position: relative; }
+  .tl-dot { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+  .tl-dot svg { width: 14px; height: 14px; }
+  .dot-purple { background: var(--purple-50); color: var(--purple-800); border: 1.5px solid var(--purple-200); }
+  .dot-teal   { background: var(--teal-50);   color: var(--teal-800);   border: 1px solid var(--border); }
+  .dot-amber  { background: var(--amber-50);  color: var(--amber-800);  border: 1px solid var(--border); }
+  .dot-blue   { background: var(--blue-50);   color: var(--blue-800);   border: 1px solid var(--border); }
+  .dot-gray   { background: var(--bg);        color: var(--text-muted); border: 1px solid var(--border); }
+  .tl-body { flex: 1; padding-top: 4px; }
+  .tl-date { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
+  .tl-text { font-size: 14px; color: var(--text); }
+  .tl-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-top: 5px; }
+  .badge-purple { background: var(--purple-50); color: var(--purple-800); border: 1px solid var(--purple-200); }
+  .badge-ok     { background: var(--teal-50);   color: var(--teal-800); }
+  .badge-warn   { background: var(--amber-50);  color: var(--amber-800); }
+  .tl-sep { height: 1px; background: var(--border); margin: 4px 0 4px 44px; }
+  footer { margin-top: 3rem; font-size: 12px; color: var(--text-muted); text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="logo-name">Launchpad</span>
+    </div>
+    <h1>Simulation DPAE consultant</h1>
+    <p class="subtitle">Renseigne la date de début de prestation et le délai de paiement client pour obtenir toutes les échéances clés.</p>
+  </header>
+
+  <div class="card">
+    <div class="inputs-grid">
+      <div class="field">
+        <label for="debut">Date début prestation client</label>
+        <input type="date" id="debut" value="2026-07-01" />
+      </div>
+      <div class="field">
+        <label for="delai">Délai paiement client</label>
+        <select id="delai">
+          <option value="30|calendaire">30 jours</option>
+          <option value="30|fin_de_mois">30 jours fin de mois</option>
+          <option value="45|calendaire">45 jours</option>
+          <option value="45|fin_de_mois">45 jours fin de mois</option>
+          <option value="60|calendaire">60 jours</option>
+          <option value="90|calendaire">90 jours</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="output"></div>
+
+  <footer>Usage interne Launchpad — RH &amp; Direction</footer>
+</div>
+
+<script>
+const icons = {
+  alert:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  contract: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  user:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  report:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>`,
+  cash:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`,
+  wallet:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v2"/><path d="M22 12h-4a2 2 0 000 4h4z"/></svg>`,
+  bank:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 9 12 2 21 9"/><path d="M5 9v10a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1V9"/><line x1="3" y1="22" x2="21" y2="22"/></svg>`,
+};
+
+function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0); }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function addMonths(d, n) { const r = new Date(d); r.setMonth(r.getMonth() + n); return r; }
+function daysBetween(a, b) { return Math.round((b - a) / (1000*60*60*24)); }
+function fmtLong(d) { return d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }); }
+function fmtShort(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function moisNom(d) { return d.toLocaleDateString('fr-FR', { month: 'long' }); }
+
+function calcEncaissement(dateFacture, jours, type) {
+  if (type === 'fin_de_mois') {
+    return endOfMonth(addDays(endOfMonth(dateFacture), jours));
+  }
+  return addDays(dateFacture, jours);
+}
+
+function tlRow(dotClass, iconKey, dateStr, label, sub, badge) {
+  return `<div class="tl-item">
+    <div class="tl-dot ${dotClass}">${icons[iconKey]}</div>
+    <div class="tl-body">
+      <div class="tl-date">${dateStr}</div>
+      <div class="tl-text">${label}</div>
+      ${sub ? `<div class="tl-sub">${sub}</div>` : ''}
+      ${badge ? `<span class="badge ${badge.cls}">${badge.txt}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function render() {
+  const val = document.getElementById('debut').value;
+  const selectVal = document.getElementById('delai').value;
+  if (!val) return;
+
+  const [joursStr, type] = selectVal.split('|');
+  const jours = parseInt(joursStr);
+  const labelDelai = document.getElementById('delai').options[document.getElementById('delai').selectedIndex].text;
+
+  const debutPresta = new Date(val);
+  const finMoisPresta = endOfMonth(debutPresta);
+  const paiement1 = calcEncaissement(finMoisPresta, jours, type);
+
+  // CDI = 1er du mois précédant le mois d'encaissement
+  const debutCdi = new Date(paiement1.getFullYear(), paiement1.getMonth() - 1, 1);
+  const dpaeLimit = addDays(debutCdi, -1);
+
+  const finMoisCdi = endOfMonth(debutCdi);
+  const paiement2 = calcEncaissement(finMoisCdi, jours, type);
+
+  // Paie à terme échu : paie mois M versée fin mois M+1
+  const versement1 = endOfMonth(addMonths(debutCdi, 1));
+  const urssaf = new Date(versement1.getFullYear(), versement1.getMonth() + 1, 15);
+  const versement2 = endOfMonth(addMonths(debutCdi, 2));
+  const ecart = daysBetween(versement1, versement2);
+  const ok = ecart <= 30;
+
+  document.getElementById('output').innerHTML = `
+    <div class="dpae-banner">
+      <div class="dpae-banner-label">⚡ DPAE à effectuer avant le</div>
+      <div class="dpae-banner-date">${fmtLong(dpaeLimit)}</div>
+      <div class="dpae-banner-sub">Veille du début CDI (${fmtShort(debutCdi)}) — délai légal impératif</div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="metric-label">Début CDI consultant</div>
+        <div class="metric-value">${fmtShort(debutCdi)}</div>
+        <div class="metric-sub">1er du mois précédant l'encaissement</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">1er encaissement client</div>
+        <div class="metric-value">${fmtShort(paiement1)}</div>
+        <div class="metric-sub">${labelDelai} — fin ${moisNom(finMoisPresta)}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">1er versement salaire</div>
+        <div class="metric-value">${fmtShort(versement1)}</div>
+        <div class="metric-sub">Paie de ${moisNom(debutCdi)}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Paiement URSSAF</div>
+        <div class="metric-value">${fmtShort(urssaf)}</div>
+        <div class="metric-sub">15 du mois suivant la 1ère paie</div>
+      </div>
+    </div>
+
+    <div class="section-label">Chronologie complète</div>
+    <div class="timeline">
+      ${tlRow('dot-purple', 'contract', fmtShort(debutPresta), 'Début prestation client', 'Convention SEP + mandats signés en amont', null)}
+      ${tlRow('dot-teal', 'report', fmtShort(finMoisPresta), 'CRA mois 1 → facturation', `Envoi CRA avant le ${fmtShort(finMoisPresta)}`, null)}
+      <div class="tl-sep"></div>
+      ${tlRow('dot-purple', 'alert', fmtShort(dpaeLimit), 'DPAE à envoyer', 'Limite légale — veille du CDI', { cls: 'badge-purple', txt: '⚡ Action prioritaire' })}
+      ${tlRow('dot-purple', 'user', fmtShort(debutCdi), 'Début CDI consultant', '1er du mois précédant l\'encaissement', null)}
+      ${tlRow('dot-teal', 'report', fmtShort(finMoisCdi), 'CRA mois 2 → facturation', `Envoi CRA avant le ${fmtShort(finMoisCdi)}`, null)}
+      <div class="tl-sep"></div>
+      ${tlRow('dot-blue', 'cash', fmtShort(paiement1), 'Encaissement client — facture mois 1', `${labelDelai} après fin ${moisNom(finMoisPresta)}`, null)}
+      ${tlRow('dot-amber', 'wallet', fmtShort(versement1), `Versement salaire — paie de ${moisNom(debutCdi)}`, 'Terme échu : versé fin du mois suivant', null)}
+      ${tlRow('dot-gray', 'bank', fmtShort(urssaf), 'Paiement URSSAF', `Sur paie de ${moisNom(debutCdi)}`, null)}
+      <div class="tl-sep"></div>
+      ${tlRow('dot-blue', 'cash', fmtShort(paiement2), 'Encaissement client — facture mois 2', `${labelDelai} après fin ${moisNom(finMoisCdi)}`, null)}
+      ${tlRow('dot-amber', 'wallet', fmtShort(versement2), `Versement salaire — paie de ${moisNom(addMonths(debutCdi, 1))}`, `Écart avec versement précédent : ${ecart}j`, ok ? { cls: 'badge-ok', txt: `✓ Conforme URSSAF (${ecart}j ≤ 30j)` } : { cls: 'badge-warn', txt: `⚠ Non conforme URSSAF (${ecart}j > 30j)` })}
+    </div>
+  `;
+}
+
+document.getElementById('debut').addEventListener('input', render);
+document.getElementById('delai').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
