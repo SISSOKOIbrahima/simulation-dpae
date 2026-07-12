@@ -1,0 +1,525 @@
+<!-- Launchpad — Revue contractuelle v2. Prise en charge des contrats très longs (découpage automatique + fusion). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241b12; --ink-soft:#4a3d2e; --paper:#f6f2ea; --card:#fffdf8;
+    --line:#d8cfc0; --critique:#a02318; --attention:#8a6410; --ok:#3d6b35;
+    --critique-bg:#f7e6e3; --attention-bg:#f5edd8; --ok-bg:#e7efe2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Public Sans',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1060px;margin:0 auto;padding:28px 20px 80px}
+  header{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:26px;flex-wrap:wrap;gap:6px}
+  .wordmark{font-family:'Fraunces',serif;font-weight:900;font-size:1.35rem;letter-spacing:.04em}
+  .wordmark span{font-weight:500;letter-spacing:.12em;font-size:.8rem;text-transform:uppercase;color:var(--ink-soft);margin-left:10px}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:6px}
+  .lede{color:var(--ink-soft);max-width:640px;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:390px 1fr;gap:22px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px}
+  .panel h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;margin-bottom:12px}
+  textarea{width:100%;min-height:230px;border:1px solid var(--line);border-radius:4px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:.8rem;background:#fff;color:var(--ink);resize:vertical}
+  textarea:focus,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .drop{margin-top:12px;border:1.5px dashed var(--line);border-radius:4px;padding:14px;text-align:center;font-size:.85rem;color:var(--ink-soft);cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.over{border-color:var(--ink);background:#fff}
+  .drop strong{color:var(--ink)}
+  .file-chip{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:.82rem;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:7px 10px}
+  .file-chip .fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-chip button{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--ink-soft);line-height:1}
+  .analyze{margin-top:16px;width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:13px;font-family:'Public Sans',sans-serif;font-weight:600;font-size:.95rem;letter-spacing:.03em;cursor:pointer;transition:opacity .15s}
+  .analyze:hover{opacity:.88}
+  .analyze:disabled{opacity:.45;cursor:default}
+  .hint{margin-top:10px;font-size:.75rem;color:var(--ink-soft)}
+  /* Résultats */
+  .placeholder{color:var(--ink-soft);font-size:.9rem;padding:30px 10px;text-align:center}
+  .loading{display:none;padding:34px 10px;text-align:center;color:var(--ink-soft);font-size:.9rem}
+  .loading .bar{margin:14px auto 0;width:220px;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+  .loading .fill{height:100%;width:5%;background:var(--ink);border-radius:3px;transition:width .4s}
+  .error{display:none;background:var(--critique-bg);border:1px solid var(--critique);border-radius:4px;color:var(--critique);padding:12px;font-size:.85rem;margin-bottom:14px}
+  .notice{display:none;background:var(--attention-bg);border:1px solid var(--attention);border-radius:4px;color:var(--attention);padding:10px 12px;font-size:.8rem;margin-bottom:14px}
+  .results{display:none}
+  .stamp-row{display:flex;justify-content:center;margin:6px 0 20px}
+  .stamp{font-family:'Fraunces',serif;font-weight:900;text-transform:uppercase;letter-spacing:.14em;font-size:1.15rem;padding:12px 26px;border:3px double currentColor;border-radius:6px;transform:rotate(-3deg);opacity:.92}
+  .stamp small{display:block;font-family:'Public Sans',sans-serif;font-weight:600;font-size:.6rem;letter-spacing:.2em;margin-top:3px;text-align:center}
+  .stamp.ok{color:var(--ok);background:var(--ok-bg)}
+  .stamp.attention{color:var(--attention);background:var(--attention-bg)}
+  .stamp.critique{color:var(--critique);background:var(--critique-bg)}
+  .sec-title{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;border-bottom:2px solid var(--ink);padding-bottom:6px;margin:22px 0 12px}
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  td:first-child{width:34%;font-weight:600;color:var(--ink-soft);text-transform:uppercase;font-size:.7rem;letter-spacing:.06em;padding-top:11px}
+  .flag{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:10px;background:#fff}
+  .flag.critique{border-left-color:var(--critique)}
+  .flag.attention{border-left-color:var(--attention)}
+  .flag.ok{border-left-color:var(--ok)}
+  .flag-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .flag-head strong{font-size:.9rem}
+  .chip{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:20px}
+  .chip.critique{background:var(--critique-bg);color:var(--critique)}
+  .chip.attention{background:var(--attention-bg);color:var(--attention)}
+  .chip.ok{background:var(--ok-bg);color:var(--ok)}
+  .extrait{font-family:'IBM Plex Mono',monospace;font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:7px 10px;margin:7px 0;color:var(--ink-soft)}
+  .flag p{font-size:.85rem}
+  .flag .reco{font-size:.83rem;margin-top:6px}
+  .flag .reco b{color:var(--ok)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="wordmark">LAUNCHPAD<span>Revue contractuelle</span></div>
+    <div style="font-size:.75rem;color:var(--ink-soft)">Usage interne — service RH &amp; juridique</div>
+  </header>
+
+  <h1>Vérifier un contrat avant signature</h1>
+  <p class="lede">Collez le texte du contrat ou déposez le PDF, quelle que soit sa longueur. Les contrats longs sont découpés et analysés partie par partie, puis les résultats sont fusionnés : fiche contrat, audit des clauses (portage salarial, clauses abusives) et verdict.</p>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Contrat à analyser</h2>
+      <textarea id="contractText" placeholder="Collez ici le texte intégral du contrat (aucune limite de longueur)…"></textarea>
+      <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Déposer des PDF">
+        <strong>Déposer un ou plusieurs PDF</strong> ou cliquer pour parcourir<br>
+        <span style="font-size:.75rem">contrat cadre, annexe de mission, bon de commande, CGV…</span>
+      </div>
+      <input type="file" id="fileInput" accept="application/pdf" multiple style="display:none">
+      <div id="fileList"></div>
+      <button class="analyze" id="analyzeBtn">Analyser le contrat</button>
+      <p class="hint">Tous les documents sont analysés ensemble (fiche et audit uniques). Une analyse de plusieurs documents longs peut prendre quelques minutes.</p>
+      <details style="margin-top:14px;font-size:.8rem;color:var(--ink-soft)">
+        <summary style="cursor:pointer;font-weight:600">⚙️ Clé API (site GitHub Pages uniquement)</summary>
+        <p style="margin:8px 0 6px">Sur le site public, renseignez la clé API Anthropic de Launchpad. Dans Claude, laissez vide.</p>
+        <input type="password" id="apiKey" placeholder="sk-ant-…" style="width:100%;border:1px solid var(--line);border-radius:4px;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
+        <button id="saveKeyBtn" style="margin-top:6px;background:none;border:1px solid var(--ink);border-radius:4px;padding:6px 12px;cursor:pointer;font-size:.75rem;color:var(--ink)">Enregistrer sur cet ordinateur</button>
+        <span id="keyStatus" style="margin-left:8px"></span>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h2>Analyse</h2>
+      <div class="error" id="errorBox"></div>
+      <div class="notice" id="noticeBox"></div>
+      <div class="placeholder" id="placeholder">L'analyse s'affichera ici : fiche contrat, audit juridique et verdict.</div>
+      <div class="loading" id="loading"><span id="loadingText">Lecture du contrat…</span><div class="bar"><div class="fill" id="loadingFill"></div></div></div>
+      <div class="results" id="results">
+        <div class="stamp-row"><div class="stamp" id="stamp"></div></div>
+        <div class="sec-title">Fiche contrat</div>
+        <table id="ficheTable"></table>
+        <div class="sec-title">Facturation</div>
+        <table id="factTable"></table>
+        <div class="sec-title">Audit juridique</div>
+        <div id="flags"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let pdfFiles = [];              // [{ name, base64 }]
+const CHUNK_SIZE = 55000;   // ~14k tokens par partie
+const OVERLAP = 2500;       // chevauchement pour ne pas couper une clause en deux
+
+const $ = id => document.getElementById(id);
+const dropZone = $('dropZone'), fileInput = $('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  addFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+function addFiles(fileListInput) {
+  const files = Array.from(fileListInput || []);
+  if (!files.length) return;
+  let rejected = 0;
+  const readers = files.map(file => new Promise(res => {
+    if (file.type !== 'application/pdf') { rejected++; return res(); }
+    const r = new FileReader();
+    r.onload = () => { pdfFiles.push({ name: file.name, base64: r.result.split(',')[1] }); res(); };
+    r.onerror = () => { rejected++; res(); };
+    r.readAsDataURL(file);
+  }));
+  Promise.all(readers).then(() => {
+    renderFileList();
+    if (rejected) showError(rejected + ' fichier(s) ignoré(s) : seuls les PDF sont acceptés.');
+    else hideError();
+  });
+}
+
+function renderFileList() {
+  $('fileList').innerHTML = pdfFiles.map((f, i) =>
+    '<div class="file-chip"><span>📄</span><span class="fname">' + esc(f.name) + '</span>' +
+    '<button data-i="' + i + '" title="Retirer" aria-label="Retirer ' + esc(f.name) + '">✕</button></div>').join('');
+  $('fileList').querySelectorAll('button').forEach(btn =>
+    btn.addEventListener('click', () => { pdfFiles.splice(+btn.dataset.i, 1); renderFileList(); }));
+}
+
+function showError(msg){ $('errorBox').textContent = msg; $('errorBox').style.display = 'block'; }
+function hideError(){ $('errorBox').style.display = 'none'; }
+function showNotice(msg){ $('noticeBox').textContent = msg; $('noticeBox').style.display = 'block'; }
+function esc(s){ const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+function setProgress(text, pct){ $('loadingText').textContent = text; $('loadingFill').style.width = Math.max(5, Math.min(100, pct)) + '%'; }
+
+/* ---------- Extraction du texte des PDF (pdf.js) ---------- */
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error('Chargement de pdf.js impossible'));
+    document.head.appendChild(s);
+  });
+}
+
+async function extractPdfText(base64) {
+  if (!window.pdfjsLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  let text = '';
+  for (let p = 1; p <= pdf.numPages; p++) {
+    setProgress('Lecture du PDF — page ' + p + '/' + pdf.numPages + '…', (p / pdf.numPages) * 15);
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    text += tc.items.map(i => i.str).join(' ') + '\n\n';
+  }
+  return text.replace(/[ \t]+/g, ' ').trim();
+}
+
+/* ---------- Découpage en parties ---------- */
+function chunkText(text) {
+  if (text.length <= CHUNK_SIZE) return [text];
+  const chunks = [];
+  let start = 0;
+  while (start < text.length) {
+    let end = Math.min(start + CHUNK_SIZE, text.length);
+    if (end < text.length) {
+      const slice = text.slice(start, end);
+      const cut = Math.max(slice.lastIndexOf('\n\n'), slice.lastIndexOf('. '));
+      if (cut > CHUNK_SIZE * 0.6) end = start + cut + 1;
+    }
+    chunks.push(text.slice(start, end));
+    if (end >= text.length) break;
+    start = end - OVERLAP;
+  }
+  return chunks;
+}
+
+/* ---------- Prompts (2 appels séparés : sorties courtes, jamais tronquées) ---------- */
+const HEADER = "Tu es l'expert juridique de la société LAUNCHPAD (SAS), qui opère en portage commercial / entrepreneurial (contrats de prestation et de sous-traitance) — jamais en portage salarial. Analyse le contrat client fourni avant signature.\n\nLe texte peut contenir plusieurs documents, séparés par des lignes '===== DOCUMENT : nom ====='. Quand plusieurs documents sont fournis, précise toujours le document concerné dans le champ 'article' (ex: 'Annexe 1 — art. 5').\n\n";
+function partieNote(part, total) {
+  return total > 1
+    ? 'Tu reçois la PARTIE ' + part + '/' + total + " d'un contrat long. Analyse uniquement ce qui figure dans cette partie ; pour les informations absentes de cette partie, mets 'Non mentionné au contrat'. D'autres parties couvriront le reste.\n\n"
+    : '';
+}
+
+function buildFichePrompt(part, total) {
+  return HEADER + partieNote(part, total) +
+`PRIORITÉ ABSOLUE : extraire les informations clés, en particulier TOUT ce qui concerne la facturation et le paiement. Recopie les formulations exactes du contrat, n'invente rien. Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant/après, sans backticks Markdown, avec exactement cette structure :
+{
+ "tjm": "montant exact + HT/TTC, ou 'Non mentionné au contrat'",
+ "delai_paiement": "la phrase COMPLÈTE du contrat sur le délai de paiement + n° d'article, ou 'Non mentionné au contrat'",
+ "consultant": "nom prénom ou 'Non mentionné au contrat'",
+ "mission": "détail: intitulé, périmètre, lieu, durée, ou 'Non mentionné au contrat'",
+ "date_debut": "date de début du contrat/mission, ou 'Non mentionné au contrat'",
+ "facturation": {
+  "email": "adresse(s) email d'envoi des factures, ou 'Non mentionné au contrat'",
+  "conditions": "conditions et modalités de facturation (phrase du contrat), ou 'Non mentionné au contrat'",
+  "portail": "portail fournisseur / plateforme de dépôt des factures, ou 'Non mentionné au contrat'",
+  "references": "références obligatoires sur la facture: n° de commande/PO, n° de contrat…, ou 'Non mentionné au contrat'",
+  "frequence": "fréquence de facturation (mensuelle…), ou 'Non mentionné au contrat'",
+  "pieces": "pièces à joindre à la facture: CRA signé…, ou 'Non mentionné au contrat'"
+ }
+}
+Pour la facturation, passe en revue TOUT le document (articles paiement, facturation, annexes, conditions particulières) : ne rate aucune adresse email, référence ou condition.
+
+CONTRAT :
+`;
+}
+
+function buildAuditPrompt(part, total) {
+  return HEADER + partieNote(part, total) +
+`Audite les clauses. Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant/après, sans backticks Markdown, avec exactement cette structure :
+{
+ "audit": [
+  {"type": "intitulé court de la clause", "article": "n° d'article", "gravite": "critique|attention|ok",
+   "extrait": "extrait exact du contrat, max 12 mots", "risque": "risque en 1 phrase courte",
+   "recommandation": "action à négocier en 1 phrase courte"}
+ ],
+ "verdict": "ok|attention|critique"
+}
+
+Points à auditer obligatoirement :
+1. PORTAGE SALARIAL : toute mention présentant Launchpad comme société de portage salarial (portage salarial, salarié porté, ordonnance 2015-380, convention du portage) → gravite "critique". Si aucune mention dans ce texte → inclure un item type "Portage salarial" gravite "ok" avec risque "Aucune mention détectée dans cette partie".
+2. Clauses abusives/déséquilibrées : non-sollicitation (durée, pénalité), non-concurrence, validation CRA excessive/unilatérale, délais de paiement > plafond légal (60 j date de facture / 45 j fin de mois, art. L441-10 C. com.) ou asymétriques, pénalités disproportionnées, responsabilité illimitée, interdiction de substitution du consultant, résiliation déséquilibrée, propriété intellectuelle trop large.
+N'inclus dans "audit" que les points pertinents (problèmes détectés + le point portage salarial). Maximum 6 items, les plus graves d'abord, chaque champ moins de 25 mots. Verdict : "ok" si signable en l'état, "attention" s'il y a des points à négocier, "critique" s'il y a au moins un point bloquant.
+
+CONTRAT :
+`;
+}
+
+/* ---------- Clé API (nécessaire uniquement sur le site GitHub Pages) ---------- */
+function storageGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function storageSet(k,v){ try { localStorage.setItem(k,v); return true; } catch(e){ return false; } }
+let memKey = '';
+function getApiKey(){ return ($('apiKey').value || memKey || storageGet('lp_api_key') || '').trim(); }
+(function initKey(){
+  const saved = storageGet('lp_api_key');
+  if (saved) { $('apiKey').value = saved; $('keyStatus').textContent = '✓ clé enregistrée'; }
+  $('saveKeyBtn').addEventListener('click', () => {
+    memKey = $('apiKey').value.trim();
+    $('keyStatus').textContent = storageSet('lp_api_key', memKey) ? '✓ clé enregistrée' : '✓ clé gardée pour cette session';
+  });
+})();
+
+/* ---------- Appel API ---------- */
+async function apiCall(messages) {
+  const headers = { 'Content-Type': 'application/json' };
+  const key = getApiKey();
+  if (key) {   // site GitHub Pages : authentification directe navigateur
+    headers['x-api-key'] = key;
+    headers['anthropic-version'] = '2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  }
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages })
+  });
+  const data = await response.json();
+  if (data.error) {
+    const msg = data.error.message || 'Erreur API';
+    if (/authentication|api.?key|credit/i.test(msg) && !key) throw new Error("Sur le site public, une clé API est requise — ouvrez « ⚙️ Clé API » sous le bouton Analyser.");
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function getText(data) { return data.content.map(i => i.type === 'text' ? i.text : '').join(''); }
+
+/* Répare un JSON tronqué : ferme les guillemets et accolades ouverts (dernier recours) */
+function repairJson(s) {
+  s = s.trim();
+  let inStr = false, escNext = false; const stack = [];
+  for (const ch of s) {
+    if (inStr) {
+      if (escNext) escNext = false;
+      else if (ch === '\\') escNext = true;
+      else if (ch === '"') inStr = false;
+    } else {
+      if (ch === '"') inStr = true;
+      else if (ch === '{' || ch === '[') stack.push(ch);
+      else if (ch === '}' || ch === ']') stack.pop();
+    }
+  }
+  if (escNext) s = s.slice(0, -1);
+  if (inStr) s += '"';
+  s = s.replace(/,\s*$/, '').replace(/:\s*$/, ': ""');
+  while (stack.length) s += stack.pop() === '{' ? '}' : ']';
+  return s;
+}
+
+async function callClaude(content, attempt = 1) {
+  try {
+    let data = await apiCall([{ role: 'user', content }]);
+    let raw = getText(data);
+    // Réponse coupée par la limite de tokens → on demande la suite (jusqu'à 4 fois)
+    let rounds = 0;
+    while (data.stop_reason === 'max_tokens' && rounds < 4) {
+      const partial = raw;
+      data = await apiCall([
+        { role: 'user', content },
+        { role: 'assistant', content: partial },
+        { role: 'user', content: "Ta réponse JSON a été coupée. Continue EXACTEMENT au caractère où elle s'est arrêtée, sans rien répéter, sans backticks, sans aucun commentaire." }
+      ]);
+      raw = partial + getText(data);
+      rounds++;
+    }
+    const clean = raw.replace(/```json|```/g, '').trim();
+    try { return JSON.parse(clean); }
+    catch (e) { return JSON.parse(repairJson(clean)); }
+  } catch (err) {
+    if (attempt < 2) return callClaude(content, attempt + 1);
+    throw err;
+  }
+}
+
+/* ---------- Fusion des analyses partielles ---------- */
+const ABSENT = /non mentionn/i;
+const FACT_KEYS = ['email','conditions','portail','references','frequence','pieces'];
+function pickBest(candidates, cumul) {
+  const vals = candidates.filter(v => v && !ABSENT.test(v));
+  if (cumul) { const uniq = [...new Set(vals)]; return uniq.length ? uniq.join(' · ') : 'Non mentionné au contrat'; }
+  return vals.sort((a, b) => b.length - a.length)[0] || 'Non mentionné au contrat';
+}
+function mergeResults(parts) {
+  const fiche = {};
+  ['tjm','delai_paiement','consultant','mission','date_debut'].forEach(k => {
+    fiche[k] = pickBest(parts.map(p => (typeof p.fiche?.[k] === 'string' ? p.fiche[k] : '').trim()), k === 'mission');
+  });
+  // Facturation : sous-champs cumulés sur toutes les parties (rien ne doit être perdu)
+  fiche.facturation = {};
+  FACT_KEYS.forEach(k => {
+    fiche.facturation[k] = pickBest(parts.map(p => {
+      const f = p.fiche?.facturation;
+      if (f && typeof f === 'object') return (f[k] || '').trim();
+      return typeof f === 'string' && k === 'conditions' ? f.trim() : '';
+    }), true);
+  });
+
+  let audit = parts.flatMap(p => Array.isArray(p.audit) ? p.audit : []);
+  // Portage salarial : garder l'alerte si détectée, sinon un seul item "ok"
+  const portage = audit.filter(f => /portage/i.test(f.type || ''));
+  audit = audit.filter(f => !/portage/i.test(f.type || ''));
+  const portageAlerte = portage.filter(f => f.gravite !== 'ok');
+  if (portageAlerte.length) audit.unshift(...portageAlerte);
+  else if (portage.length) audit.push({ type: 'Portage salarial', article: '', gravite: 'ok', risque: 'Aucune mention de portage salarial détectée dans le contrat.', extrait: '', recommandation: '' });
+  // dédoublonnage (type + article)
+  const seen = new Set();
+  audit = audit.filter(f => {
+    const key = ((f.type || '') + '|' + (f.article || '')).toLowerCase().replace(/\s+/g, ' ');
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+  const rank = { critique: 0, attention: 1, ok: 2 };
+  audit.sort((a, b) => (rank[a.gravite] ?? 1) - (rank[b.gravite] ?? 1));
+
+  let worst = audit.some(f => f.gravite === 'critique') ? 'critique'
+            : audit.some(f => f.gravite === 'attention') ? 'attention' : 'ok';
+  parts.forEach(p => { if ((rank[p.verdict] ?? 2) < (rank[worst] ?? 2)) worst = p.verdict; });
+
+  const nCrit = audit.filter(f => f.gravite === 'critique').length;
+  const nAtt = audit.filter(f => f.gravite === 'attention').length;
+  const verdict_texte = nCrit || nAtt
+    ? (nCrit ? nCrit + ' point(s) bloquant(s)' : '') + (nCrit && nAtt ? ' et ' : '') + (nAtt ? nAtt + ' point(s) à négocier' : '') + ' identifié(s) sur l\u2019ensemble du contrat.'
+    : 'Aucun point de vigilance identifié sur l\u2019ensemble du contrat.';
+  return { fiche, audit, verdict: worst, verdict_texte };
+}
+
+/* ---------- Analyse ---------- */
+$('analyzeBtn').addEventListener('click', analyze);
+
+async function analyze() {
+  const pastedText = $('contractText').value.trim();
+  if (!pdfFiles.length && !pastedText) { showError('Collez le texte du contrat ou déposez au moins un PDF.'); return; }
+  hideError(); $('noticeBox').style.display = 'none';
+  $('placeholder').style.display = 'none';
+  $('results').style.display = 'none';
+  $('loading').style.display = 'block';
+  setProgress('Lecture des documents…', 5);
+  $('analyzeBtn').disabled = true;
+
+  try {
+    // 1) Rassembler le texte de tous les documents ; isoler les PDF scannés (texte non extractible)
+    const textBlocks = [];
+    const scannedFiles = [];
+    if (pastedText) textBlocks.push((pdfFiles.length ? '===== DOCUMENT : Texte collé =====\n' : '') + pastedText);
+    for (let i = 0; i < pdfFiles.length; i++) {
+      const f = pdfFiles[i];
+      setProgress('Lecture de « ' + f.name + ' » (' + (i + 1) + '/' + pdfFiles.length + ')…', 5 + ((i + 1) / pdfFiles.length) * 10);
+      let t = '';
+      try { t = await extractPdfText(f.base64); } catch (e) { t = ''; }
+      if (t && t.length >= 400) textBlocks.push('===== DOCUMENT : ' + f.name + ' =====\n' + t);
+      else scannedFiles.push(f);
+    }
+    const multiDoc = (pdfFiles.length + (pastedText ? 1 : 0)) > 1;
+
+    // 2) Analyser le texte combiné, découpé en parties si long
+    const parts = [];
+    const fullText = textBlocks.join('\n\n');
+    const chunks = fullText ? chunkText(fullText) : [];
+    const totalSteps = chunks.length + scannedFiles.length;
+    let done = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      const label = chunks.length > 1 ? 'Partie ' + (i + 1) + '/' + chunks.length : 'Analyse';
+      const base = 15 + (done / totalSteps) * 80, step = 80 / totalSteps;
+      setProgress(label + ' — extraction des informations…', base + step * 0.3);
+      const fiche = await callClaude([{ type: 'text', text: buildFichePrompt(i + 1, chunks.length) + chunks[i] }]);
+      setProgress(label + ' — audit juridique…', base + step * 0.7);
+      const auditRes = await callClaude([{ type: 'text', text: buildAuditPrompt(i + 1, chunks.length) + chunks[i] }]);
+      parts.push({ fiche, audit: auditRes.audit, verdict: auditRes.verdict });
+      done++;
+    }
+
+    // 3) PDF scannés : analyse directe du document
+    for (const f of scannedFiles) {
+      const doc = { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.base64 } };
+      const note = "\n(Document PDF joint : « " + f.name + " ». Indique ce nom dans le champ 'article'.)";
+      const base = 15 + (done / totalSteps) * 80, step = 80 / totalSteps;
+      setProgress('« ' + f.name + ' » (scanné) — extraction…', base + step * 0.3);
+      const fiche = await callClaude([doc, { type: 'text', text: buildFichePrompt(1, 1) + note }]);
+      setProgress('« ' + f.name + ' » (scanné) — audit juridique…', base + step * 0.7);
+      const auditRes = await callClaude([doc, { type: 'text', text: buildAuditPrompt(1, 1) + note }]);
+      parts.push({ fiche, audit: auditRes.audit, verdict: auditRes.verdict });
+      done++;
+    }
+
+    const merged = mergeResults(parts);
+    const notices = [];
+    if (multiDoc) notices.push((pdfFiles.length + (pastedText ? 1 : 0)) + ' documents analysés ensemble, résultats fusionnés.');
+    else if (chunks.length > 1) notices.push('Contrat long : analysé en ' + chunks.length + ' parties, résultats fusionnés.');
+    if (scannedFiles.length) notices.push(scannedFiles.length + ' PDF scanné(s) (texte non extractible) analysé(s) directement.');
+    if (notices.length) showNotice(notices.join(' '));
+
+    setProgress('Fusion des résultats…', 100);
+    render(merged);
+  } catch (err) {
+    console.error(err);
+    showError("L'analyse a échoué : " + err.message + ' — Réessayez dans quelques instants.');
+    $('placeholder').style.display = 'block';
+  } finally {
+    $('loading').style.display = 'none';
+    $('analyzeBtn').disabled = false;
+  }
+}
+
+/* ---------- Rendu ---------- */
+function render(r) {
+  const labels = { ok: ['Signable', 'en l\u2019état'], attention: ['À négocier', 'avant signature'], critique: ['Ne pas signer', 'sans modification'] };
+  const v = labels[r.verdict] ? r.verdict : 'attention';
+  const stamp = $('stamp');
+  stamp.className = 'stamp ' + v;
+  stamp.innerHTML = esc(labels[v][0]) + '<small>' + esc(labels[v][1]) + '</small>';
+
+  const rows = [
+    ['TJM', r.fiche?.tjm], ['Délai de paiement', r.fiche?.delai_paiement],
+    ['Consultant', r.fiche?.consultant], ['Mission', r.fiche?.mission],
+    ['Date de début', r.fiche?.date_debut]
+  ];
+  $('ficheTable').innerHTML = rows.map(([k, val]) =>
+    '<tr><td>' + k + '</td><td>' + esc(val || 'Non mentionné au contrat') + '</td></tr>').join('');
+
+  const f = r.fiche?.facturation || {};
+  const factRows = [
+    ['Email d\u2019envoi des factures', f.email], ['Conditions', f.conditions],
+    ['Portail fournisseur', f.portail], ['Références à mentionner', f.references],
+    ['Fréquence', f.frequence], ['Pièces à joindre', f.pieces]
+  ];
+  $('factTable').innerHTML = factRows.map(([k, val]) =>
+    '<tr><td>' + k + '</td><td>' + esc(val || 'Non mentionné au contrat') + '</td></tr>').join('');
+
+  const chipLabel = { critique: 'Bloquant', attention: 'À négocier', ok: 'Conforme' };
+  const flags = Array.isArray(r.audit) ? r.audit : [];
+  $('flags').innerHTML = flags.length ? flags.map(f => {
+    const g = chipLabel[f.gravite] ? f.gravite : 'attention';
+    return '<div class="flag ' + g + '">' +
+      '<div class="flag-head"><strong>' + esc(f.type) + '</strong>' +
+      (f.article ? '<span style="font-size:.75rem;color:var(--ink-soft)">' + esc(f.article) + '</span>' : '') +
+      '<span class="chip ' + g + '">' + chipLabel[g] + '</span></div>' +
+      (f.extrait ? '<div class="extrait">« ' + esc(f.extrait) + ' »</div>' : '') +
+      (f.risque ? '<p>' + esc(f.risque) + '</p>' : '') +
+      (f.recommandation && g !== 'ok' ? '<p class="reco"><b>À négocier :</b> ' + esc(f.recommandation) + '</p>' : '') +
+      '</div>';
+  }).join('') : '<p style="font-size:.85rem;color:var(--ink-soft)">Aucun point de vigilance détecté.</p>';
+
+  if (r.verdict_texte) {
+    $('flags').insertAdjacentHTML('beforeend',
+      '<p style="margin-top:14px;font-size:.85rem;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:10px">' + esc(r.verdict_texte) + '</p>');
+  }
+  $('results').style.display = 'block';
+}
+</script>
