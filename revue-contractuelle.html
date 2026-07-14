@@ -1,4 +1,4 @@
-<!-- Launchpad — Revue contractuelle v2. Prise en charge des contrats très longs (découpage automatique + fusion). -->
+<!-- Launchpad — Revue contractuelle v3. Contrats longs + multi-documents + relais Cloudflare. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -31,7 +31,6 @@
   .analyze:hover{opacity:.88}
   .analyze:disabled{opacity:.45;cursor:default}
   .hint{margin-top:10px;font-size:.75rem;color:var(--ink-soft)}
-  /* Résultats */
   .placeholder{color:var(--ink-soft);font-size:.9rem;padding:30px 10px;text-align:center}
   .loading{display:none;padding:34px 10px;text-align:center;color:var(--ink-soft);font-size:.9rem}
   .loading .bar{margin:14px auto 0;width:220px;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
@@ -87,8 +86,8 @@
       <button class="analyze" id="analyzeBtn">Analyser le contrat</button>
       <p class="hint">Tous les documents sont analysés ensemble (fiche et audit uniques). Une analyse de plusieurs documents longs peut prendre quelques minutes.</p>
       <details style="margin-top:14px;font-size:.8rem;color:var(--ink-soft)">
-        <summary style="cursor:pointer;font-weight:600">⚙️ Clé API (site GitHub Pages uniquement)</summary>
-        <p style="margin:8px 0 6px">Sur le site public, renseignez la clé API Anthropic de Launchpad. Dans Claude, laissez vide.</p>
+        <summary style="cursor:pointer;font-weight:600">⚙️ Clé API (secours)</summary>
+        <p style="margin:8px 0 6px">À utiliser uniquement si le relais est indisponible.</p>
         <input type="password" id="apiKey" placeholder="sk-ant-…" style="width:100%;border:1px solid var(--line);border-radius:4px;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
         <button id="saveKeyBtn" style="margin-top:6px;background:none;border:1px solid var(--ink);border-radius:4px;padding:6px 12px;cursor:pointer;font-size:.75rem;color:var(--ink)">Enregistrer sur cet ordinateur</button>
         <span id="keyStatus" style="margin-left:8px"></span>
@@ -115,6 +114,9 @@
 </div>
 
 <script>
+/* ---------- Relais sécurisé Cloudflare : la clé API reste côté serveur ---------- */
+const PROXY_URL = 'https://revue-contractuelle.direction-d75.workers.dev';
+
 let pdfFiles = [];              // [{ name, base64 }]
 const CHUNK_SIZE = 55000;   // ~14k tokens par partie
 const OVERLAP = 2500;       // chevauchement pour ne pas couper une clause en deux
@@ -262,12 +264,13 @@ CONTRAT :
 `;
 }
 
-/* ---------- Clé API (nécessaire uniquement sur le site GitHub Pages) ---------- */
+/* ---------- Clé API de secours (si le relais est indisponible) ---------- */
 function storageGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
 function storageSet(k,v){ try { localStorage.setItem(k,v); return true; } catch(e){ return false; } }
 let memKey = '';
 function getApiKey(){ return ($('apiKey').value || memKey || storageGet('lp_api_key') || '').trim(); }
 (function initKey(){
+  if (PROXY_URL) { const d = document.querySelector('details'); if (d) d.style.display = 'none'; return; }
   const saved = storageGet('lp_api_key');
   if (saved) { $('apiKey').value = saved; $('keyStatus').textContent = '✓ clé enregistrée'; }
   $('saveKeyBtn').addEventListener('click', () => {
@@ -279,22 +282,25 @@ function getApiKey(){ return ($('apiKey').value || memKey || storageGet('lp_api_
 /* ---------- Appel API ---------- */
 async function apiCall(messages) {
   const headers = { 'Content-Type': 'application/json' };
-  const key = getApiKey();
-  if (key) {   // site GitHub Pages : authentification directe navigateur
-    headers['x-api-key'] = key;
-    headers['anthropic-version'] = '2023-06-01';
-    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  let url = 'https://api.anthropic.com/v1/messages';
+  if (PROXY_URL) {
+    url = PROXY_URL;   // relais sécurisé : la clé est côté serveur, invisible pour les utilisateurs
+  } else {
+    const key = getApiKey();
+    if (key) {
+      headers['x-api-key'] = key;
+      headers['anthropic-version'] = '2023-06-01';
+      headers['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
   }
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch(url, {
     method: 'POST',
     headers,
     body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages })
   });
   const data = await response.json();
   if (data.error) {
-    const msg = data.error.message || 'Erreur API';
-    if (/authentication|api.?key|credit/i.test(msg) && !key) throw new Error("Sur le site public, une clé API est requise — ouvrez « ⚙️ Clé API » sous le bouton Analyser.");
-    throw new Error(msg);
+    throw new Error(data.error.message || 'Erreur API');
   }
   return data;
 }
