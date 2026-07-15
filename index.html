@@ -10,6 +10,7 @@
   :root{
     --ink:#241b12; --ink-soft:#4a3d2e; --paper:#f6f2ea; --card:#fffdf8;
     --line:#d8cfc0; --accent:#3d6b35;
+    --social:#a02318; --factu:#3d6b35; --livr:#8a6410;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -44,6 +45,24 @@
   .card.soon{opacity:.55;cursor:default}
   .card.soon:hover{transform:none;box-shadow:none}
   .card.soon .go{color:var(--ink-soft)}
+
+  /* ---- Tableau de bord : prochaines échéances ---- */
+  .dash{display:none;margin-top:38px}
+  .dash-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:14px}
+  .dash-head h2{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700}
+  .dash-head a{font-size:.78rem;font-weight:700;color:var(--accent);text-decoration:none}
+  .dash-head a:hover{text-decoration:underline}
+  .ups{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+  .up{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:6px;padding:12px 14px}
+  .up.social{border-left-color:var(--social)}
+  .up.factu{border-left-color:var(--factu)}
+  .up.livr{border-left-color:var(--livr)}
+  .up .when{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+  .up .date{font-family:'Fraunces',serif;font-weight:900;font-size:1.05rem}
+  .up .badge{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+  .up .badge.urgent{color:var(--social)}
+  .up .titre{font-size:.84rem;font-weight:600;line-height:1.35}
+  .up .note{font-size:.72rem;color:var(--ink-soft);margin-top:3px;line-height:1.4}
   footer{padding:14px 24px;font-size:.72rem;color:var(--ink-soft);text-align:center;border-top:1px solid var(--line)}
 </style>
 </head>
@@ -87,7 +106,7 @@
       <a class="card" href="#faq">
         <div class="icon">💬</div>
         <h2>Assistant FAQ</h2>
-        <p>Pose n'importe quelle question sur Launchpad : CRA, paie, SEP, GPU, mutuelle, DPAE… l'assistant IA répond immédiatement.</p>
+        <p>Pose n'importe quelle question sur les procédures internes : DPAE, onboarding, contrats, DC4, circuit de facturation… l'assistant IA répond immédiatement.</p>
         <div class="go">Ouvrir →</div>
       </a>
       <div class="card soon">
@@ -96,6 +115,15 @@
         <p>D'autres rubriques viendront s'ajouter ici (générateur d'emails de négociation, comparaison de versions de contrats…).</p>
         <div class="go">Bientôt disponible</div>
       </div>
+    </div>
+
+    <!-- Tableau de bord : prochaines échéances (alimenté automatiquement par dates.html) -->
+    <div class="dash" id="dash">
+      <div class="dash-head">
+        <h2>⏳ Prochaines échéances</h2>
+        <a href="#dates">Voir tout le calendrier →</a>
+      </div>
+      <div class="ups" id="ups"></div>
     </div>
   </div>
   <footer>Usage interne — SAS Launchpad, Saint-Germain-en-Laye</footer>
@@ -122,6 +150,7 @@
 </div>
 
 <script>
+  /* ---- Navigation ---- */
   const links = document.querySelectorAll('nav a');
   function show(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -129,14 +158,52 @@
     const view = document.getElementById('view-' + name);
     if (!view) return show('accueil');
     view.classList.add('active');
-    // charger l'iframe seulement à la première ouverture (site plus rapide)
     const frame = view.querySelector('iframe');
     if (frame && !frame.src) frame.src = frame.dataset.src;
   }
-  // menu et cartes utilisent le hash (#simulation, #revue, #dates, #faq) → liens partageables
   function route(){ show((location.hash || '#accueil').slice(1)); }
   window.addEventListener('hashchange', route);
   route();
+
+  /* ---- Tableau de bord : lit les échéances directement dans dates.html ----
+     Une seule source de vérité : modifie les dates dans dates.html,
+     l'accueil se met à jour automatiquement. */
+  (async function loadDash() {
+    try {
+      const res = await fetch('dates.html');
+      const html = await res.text();
+      const m = html.match(/const EVENTS = \[[\s\S]*?\n\];/);
+      if (!m) return;
+      const EVENTS = new Function(m[0] + ' return EVENTS;')();
+
+      const lastDay = (y, mo) => new Date(y, mo + 1, 0).getDate();
+      const resolve = (ev, y, mo) => ev.jour === 'fin' ? lastDay(y, mo) : Math.min(ev.jour, lastDay(y, mo));
+      const MOIS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const items = [];
+      for (let off = 0; off < 2; off++) {
+        const d0 = new Date(today.getFullYear(), today.getMonth() + off, 1);
+        EVENTS.forEach(ev => {
+          const d = new Date(d0.getFullYear(), d0.getMonth(), resolve(ev, d0.getFullYear(), d0.getMonth()));
+          if (d >= today) items.push({ ...ev, d });
+        });
+      }
+      items.sort((a, b) => a.d - b.d);
+
+      const esc = s => { const el = document.createElement('div'); el.textContent = s ?? ''; return el.innerHTML; };
+      document.getElementById('ups').innerHTML = items.slice(0, 4).map(it => {
+        const j = Math.round((it.d - today) / 86400000);
+        const badge = j === 0 ? "aujourd'hui" : j === 1 ? 'demain' : 'dans ' + j + ' j';
+        return '<div class="up ' + it.cat + '">' +
+          '<div class="when"><span class="date">' + it.d.getDate() + ' ' + MOIS[it.d.getMonth()] + '</span>' +
+          '<span class="badge' + (j <= 2 ? ' urgent' : '') + '">' + badge + '</span></div>' +
+          '<div class="titre">' + esc(it.titre) + '</div>' +
+          '<div class="note">' + esc(it.note) + '</div></div>';
+      }).join('');
+      if (items.length) document.getElementById('dash').style.display = 'block';
+    } catch (e) { /* si dates.html est absent, on masque simplement le bloc */ }
+  })();
 </script>
 </body>
 </html>
