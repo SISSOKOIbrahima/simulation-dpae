@@ -63,7 +63,7 @@
 <div class="view active" id="view-accueil">
   <div class="home">
     <h1>Outils internes Launchpad</h1>
-    <p class="lede">Les outils du quotidien pour l'équipe : simulation des délais, vérification des contrats avant signature, et bientôt plus.</p>
+    <p class="lede">Les outils du quotidien pour l'équipe : simulation des délais, vérification des contrats avant signature, échéancier mensuel, et bientôt plus.</p>
     <div class="cards">
       <a class="card" href="#simulation">
         <div class="icon">📅</div>
@@ -75,6 +75,12 @@
         <div class="icon">📋</div>
         <h2>Revue contractuelle</h2>
         <p>Analyse IA des contrats clients avant signature : TJM, délais de paiement, facturation, détection de clauses abusives et mentions de portage salarial.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
+      <a class="card" href="#dates">
+        <div class="icon">🗓️</div>
+        <h2>Dates importantes</h2>
+        <p>L'échéancier mensuel : organismes sociaux (DSN, URSSAF, AGIRC-ARRCO, AXA), facturation SEP / GPU / salaires, et livrables consultants avec explications.</p>
         <div class="go">Ouvrir →</div>
       </a>
       <div class="card soon">
@@ -98,6 +104,11 @@
   <iframe class="frame" id="frame-revue" data-src="revue-contractuelle.html" title="Revue contractuelle"></iframe>
 </div>
 
+<!-- Dates importantes -->
+<div class="view" id="view-dates">
+  <iframe class="frame" id="frame-dates" data-src="dates.html" title="Dates importantes"></iframe>
+</div>
+
 <script>
   const links = document.querySelectorAll('nav a');
   function show(name) {
@@ -110,7 +121,7 @@
     const frame = view.querySelector('iframe');
     if (frame && !frame.src) frame.src = frame.dataset.src;
   }
-  // les cartes de l'accueil et le menu utilisent le hash (#simulation, #revue) → liens partageables
+  // les cartes de l'accueil et le menu utilisent le hash (#simulation, #revue, #dates) → liens partageables
   function route(){ show((location.hash || '#accueil').slice(1)); }
   window.addEventListener('hashchange', route);
   route();
