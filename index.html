@@ -56,6 +56,7 @@
     <a href="#simulation" data-view="simulation">Simulation DPAE</a>
     <a href="#revue" data-view="revue">Revue contractuelle</a>
     <a href="#dates" data-view="dates">Dates importantes</a>
+    <a href="#faq" data-view="faq">Assistant FAQ</a>
   </nav>
 </div>
 
@@ -63,7 +64,7 @@
 <div class="view active" id="view-accueil">
   <div class="home">
     <h1>Outils internes Launchpad</h1>
-    <p class="lede">Les outils du quotidien pour l'équipe : simulation des délais, vérification des contrats avant signature, échéancier mensuel, et bientôt plus.</p>
+    <p class="lede">Les outils du quotidien pour l'équipe : simulation des délais, vérification des contrats avant signature, échéancier mensuel, assistant FAQ, et bientôt plus.</p>
     <div class="cards">
       <a class="card" href="#simulation">
         <div class="icon">📅</div>
@@ -83,6 +84,12 @@
         <p>L'échéancier mensuel : organismes sociaux (DSN, URSSAF, AGIRC-ARRCO, AXA), facturation SEP / GPU / salaires, et livrables consultants avec explications.</p>
         <div class="go">Ouvrir →</div>
       </a>
+      <a class="card" href="#faq">
+        <div class="icon">💬</div>
+        <h2>Assistant FAQ</h2>
+        <p>Pose n'importe quelle question sur Launchpad : CRA, paie, SEP, GPU, mutuelle, DPAE… l'assistant IA répond immédiatement.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
       <div class="card soon">
         <div class="icon">🧰</div>
         <h2>Prochainement</h2>
@@ -94,7 +101,7 @@
   <footer>Usage interne — SAS Launchpad, Saint-Germain-en-Laye</footer>
 </div>
 
-<!-- Simulation DPAE (page existante, intégrée telle quelle) -->
+<!-- Simulation DPAE -->
 <div class="view" id="view-simulation">
   <iframe class="frame" id="frame-simulation" data-src="simulation.html" title="Simulation DPAE"></iframe>
 </div>
@@ -109,6 +116,11 @@
   <iframe class="frame" id="frame-dates" data-src="dates.html" title="Dates importantes"></iframe>
 </div>
 
+<!-- Assistant FAQ -->
+<div class="view" id="view-faq">
+  <iframe class="frame" id="frame-faq" data-src="faq.html" title="Assistant FAQ"></iframe>
+</div>
+
 <script>
   const links = document.querySelectorAll('nav a');
   function show(name) {
@@ -121,7 +133,7 @@
     const frame = view.querySelector('iframe');
     if (frame && !frame.src) frame.src = frame.dataset.src;
   }
-  // les cartes de l'accueil et le menu utilisent le hash (#simulation, #revue, #dates) → liens partageables
+  // menu et cartes utilisent le hash (#simulation, #revue, #dates, #faq) → liens partageables
   function route(){ show((location.hash || '#accueil').slice(1)); }
   window.addEventListener('hashchange', route);
   route();
