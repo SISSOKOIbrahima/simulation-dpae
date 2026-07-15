@@ -1,0 +1,229 @@
+<!-- Launchpad — Dates importantes. Échéancier mensuel avec infobulles explicatives. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241b12; --ink-soft:#4a3d2e; --paper:#f6f2ea; --card:#fffdf8; --line:#d8cfc0;
+    --social:#a02318; --social-bg:#f7e6e3;
+    --factu:#3d6b35; --factu-bg:#e7efe2;
+    --livr:#8a6410;  --livr-bg:#f5edd8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Public Sans',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1060px;margin:0 auto;padding:28px 20px 80px}
+  header{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:26px;flex-wrap:wrap;gap:6px}
+  .wordmark{font-family:'Fraunces',serif;font-weight:900;font-size:1.35rem;letter-spacing:.04em}
+  .wordmark span{font-weight:500;letter-spacing:.12em;font-size:.8rem;text-transform:uppercase;color:var(--ink-soft);margin-left:10px}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:6px}
+  .lede{color:var(--ink-soft);max-width:640px;margin-bottom:18px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+  .legend span{font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:20px}
+  .l-social{background:var(--social-bg);color:var(--social)}
+  .l-factu{background:var(--factu-bg);color:var(--factu)}
+  .l-livr{background:var(--livr-bg);color:var(--livr)}
+  .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:22px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px}
+  .panel h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;margin-bottom:12px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-head button{background:none;border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;font-size:.9rem;color:var(--ink)}
+  .cal-head button:hover{border-color:var(--ink)}
+  .cal-title{font-family:'Fraunces',serif;font-weight:700;font-size:1.05rem;text-transform:capitalize}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .dow{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);text-align:center;padding:4px 0}
+  .day{min-height:64px;border:1px solid var(--line);border-radius:4px;padding:4px 6px;font-size:.75rem;background:#fff}
+  .day.off{background:transparent;border-color:transparent}
+  .day.today{outline:2px solid var(--ink)}
+  .day .n{font-weight:700;font-size:.72rem}
+  .ev{display:block;margin-top:3px;font-size:.6rem;font-weight:600;line-height:1.25;padding:2px 4px;border-radius:3px;cursor:help}
+  .ev.social{background:var(--social-bg);color:var(--social)}
+  .ev.factu{background:var(--factu-bg);color:var(--factu)}
+  .ev.livr{background:var(--livr-bg);color:var(--livr)}
+  .up{border-left:4px solid var(--line);border-radius:4px;background:#fff;border:1px solid var(--line);padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:baseline}
+  .up.social{border-left-color:var(--social)}
+  .up.factu{border-left-color:var(--factu)}
+  .up.livr{border-left-color:var(--livr)}
+  .up .date{font-family:'Fraunces',serif;font-weight:900;font-size:1rem;min-width:58px}
+  .up .titre{font-size:.85rem;font-weight:600}
+  .up .note{font-size:.75rem;color:var(--ink-soft)}
+  .up .badge{margin-left:auto;font-size:.68rem;font-weight:700;color:var(--ink-soft);white-space:nowrap}
+  .sec-title{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;border-bottom:2px solid var(--ink);padding-bottom:6px;margin:22px 0 12px}
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  td:first-child{width:80px;font-family:'Fraunces',serif;font-weight:900}
+  /* ---- Infobulles ⓘ ---- */
+  .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:.62rem;font-weight:700;font-style:normal;cursor:help;vertical-align:middle;margin-left:6px;flex:none}
+  .tip .tipbox{display:none;position:absolute;bottom:135%;right:-10px;width:260px;background:var(--ink);color:var(--paper);padding:10px 12px;border-radius:6px;font-size:.73rem;font-weight:400;line-height:1.45;z-index:20;box-shadow:0 6px 18px rgba(36,27,18,.25)}
+  .tip .tipbox::after{content:'';position:absolute;top:100%;right:14px;border:6px solid transparent;border-top-color:var(--ink)}
+  .tip:hover .tipbox,.tip:focus .tipbox{display:block}
+  @media(max-width:860px){.tip .tipbox{width:210px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="wordmark">LAUNCHPAD<span>Dates importantes</span></div>
+    <div style="font-size:.75rem;color:var(--ink-soft)">Usage interne — service RH &amp; juridique</div>
+  </header>
+
+  <h1>Échéancier mensuel</h1>
+  <p class="lede">Toutes les dates récurrentes du mois : organismes sociaux, facturation (circuit SEP / GPU / salaires) et livrables consultants. Passez la souris sur les <span class="tip" tabindex="0">i<span class="tipbox">Comme ceci ! Chaque échéance a une bulle qui explique à quoi elle sert et pourquoi elle est importante.</span></span> pour comprendre l'intérêt de chaque échéance.</p>
+  <div class="legend">
+    <span class="l-social">● Organismes sociaux</span>
+    <span class="l-factu">● Facturation</span>
+    <span class="l-livr">● Livrables consultants</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="cal-head">
+        <button id="prev">← Mois préc.</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button id="next">Mois suiv. →</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <p style="font-size:.7rem;color:var(--ink-soft);margin-top:8px">Survolez une étiquette du calendrier pour voir le détail.</p>
+    </div>
+    <div class="panel">
+      <h2>Prochaines échéances</h2>
+      <div id="upcoming"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:22px">
+    <h2>Récapitulatif du mois type</h2>
+    <div id="recap"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MODIFIER LES DATES ICI
+   jour : numéro du jour du mois, ou 'fin' pour le dernier jour
+   cat  : 'social' | 'factu' | 'livr'
+   note : ce que c'est (affiché sous le titre)
+   info : POURQUOI c'est important (affiché dans la bulle ⓘ)
+   ============================================================ */
+const EVENTS = [
+  // — Organismes sociaux (sur la paie du mois précédent) —
+  { jour: 5,  cat: 'social', titre: 'AXA mutuelle + prévoyance',
+    note: 'Prélèvement SEPA mensuel (contrats 2526391951000 / 2526391910000)',
+    info: "Garantit la couverture santé et prévoyance de tous les salariés. Un rejet de prélèvement peut entraîner la suspension des garanties des consultants — vérifier que le compte est approvisionné." },
+  { jour: 5,  cat: 'social', titre: 'Médecine du travail',
+    note: 'Cotisation mensuelle SPST',
+    info: "Obligation légale de l'employeur : sans adhésion à jour, pas de visites médicales d'embauche ni de suivi des consultants, et risque de sanction en cas de contrôle de l'inspection du travail." },
+  { jour: 15, cat: 'social', titre: 'DSN + URSSAF + PAS',
+    note: 'Dépôt DSN du mois précédent, cotisations URSSAF et prélèvement à la source (DGFiP). ⚠️ DSN néant si aucune paie',
+    info: "La DSN est LA déclaration unique : elle alimente l'URSSAF, la retraite, l'assurance maladie et les impôts. Un oubli = pénalités et relances de la DGFiP. Même sans aucune paie dans le mois, la DSN néant reste obligatoire." },
+  { jour: 25, cat: 'social', titre: 'AGIRC-ARRCO',
+    note: 'Cotisations retraite complémentaire (paie du mois précédent)',
+    info: "Alimente la retraite complémentaire des consultants cadres. L'affiliation est automatique via la DSN/Payfit, mais le paiement doit être honoré au 25 pour éviter les majorations de retard." },
+
+  // — Facturation (circuit complet du schéma financier) —
+  { jour: 'fin', cat: 'factu', titre: '① Facture client (Launchpad)',
+    note: 'Envoi avant le 30/31, au plus tard le 5 — CRA signé requis. Encaissement J+60/J+75/J+90 selon contrat',
+    info: "Point de départ de tout le circuit financier : sans facture émise (et sans CRA signé), aucun encaissement, donc pas de salaire variable, pas de reversement SEP ni GPU. Chaque jour de retard d'envoi décale d'autant l'encaissement." },
+  { jour: 'fin', cat: 'factu', titre: '② Facture SEP → Launchpad',
+    note: 'La SEP facture Launchpad (reste de CA) — avec GreenEra',
+    info: "Formalise le reversement du chiffre d'affaires à la SEP dont le consultant est associé à 98 %. Indispensable pour la comptabilité des deux structures et pour que la répartition des bénéfices soit juste." },
+  { jour: 'fin', cat: 'factu', titre: '③ Factures GreenEra → SEP',
+    note: 'GreenEra Plateforme (co-associé SEP) et GreenEra Services (facture PDC) facturent la SEP — paiement J+30',
+    info: "Rémunère les prestations GreenEra prévues au Socle Juridique Commun (plateforme + services PDC). À contrôler chaque mois pour détecter tout écart de facturation avant paiement." },
+  { jour: 'fin', cat: 'factu', titre: '④ Salaires + bulletins',
+    note: 'Virement des paies consultants via Payfit (salaire J+35, fiche de paie J+30)',
+    info: "Le salaire CDI est la partie fixe et sécurisée de la rémunération du consultant : c'est lui qui garantit son statut de salarié (droits chômage, retraite, mutuelle, crédit immobilier…)." },
+  { jour: 10, cat: 'factu', titre: '⑤ Répartitions SEP & GPU',
+    note: 'Après encaissement client : BNC SEP 98 % consultant / 2 % GreenEra Holding, et BIC GreenEra (GPU) 98 % / 2 %',
+    info: "C'est la partie variable de la rémunération du consultant : les bénéfices de la SEP (BNC) et du co-investissement GPU (BIC) lui sont reversés à 98 %. Ne peut être traité qu'une fois le paiement client encaissé." },
+
+  // — Livrables : consultant → Launchpad —
+  { jour: 20, cat: 'livr', titre: '1re relance CRA',
+    note: 'Email automatique Odoo — ouverture de la fenêtre de remise (20-25)',
+    info: "Obtenir les CRA tôt permet de facturer dès la fin du mois, donc d'encaisser plus tôt — au bénéfice direct du consultant vu les délais clients de 60 à 90 jours." },
+  { jour: 23, cat: 'livr', titre: '2e relance CRA',
+    note: 'Email automatique Odoo',
+    info: "Relance intermédiaire pour ne laisser personne passer entre les mailles : plus le CRA arrive tard, plus la facturation et l'encaissement sont décalés." },
+  { jour: 25, cat: 'livr', titre: 'Date limite CRA signé',
+    note: 'Le consultant doit avoir remis son CRA signé par le client',
+    info: "Le CRA signé est LA pièce indispensable : sans lui, impossible de facturer le client. Tout retard décale l'encaissement et donc les reversements SEP/GPU du consultant lui-même." },
+  { jour: 27, cat: 'livr', titre: 'Relance finale retardataires',
+    note: 'Email automatique Odoo — dernière relance',
+    info: "Dernier filet de sécurité : un CRA toujours manquant au 27 compromet la facturation du mois en cours et repousse tout le circuit financier d'un mois." },
+
+  // — Livrables : Launchpad → consultant —
+  { jour: 'fin', cat: 'livr', titre: 'Bulletin de paie + salaire',
+    note: 'À remettre au consultant via Payfit avec le virement',
+    info: "Obligation légale de l'employeur. Le consultant en a aussi besoin pour ses démarches personnelles : location, crédit, préfecture… Un bulletin en retard, c'est un consultant bloqué." },
+  { jour: 'fin', cat: 'livr', titre: 'Copie facture client',
+    note: 'Transmettre la facture émise en son nom (mandat de facturation SEP)',
+    info: "Transparence du mandat de facturation : le consultant doit savoir ce qui a été facturé en son nom et peut vérifier TJM, jours facturés et références. C'est un gage de confiance dans le modèle." },
+  { jour: 10, cat: 'livr', titre: 'Suivi des paiements SEP',
+    note: 'Point mensuel : encaissements clients reçus / en attente + répartition BNC 98 %',
+    info: "Avec des délais clients de 60 à 90 jours, ce point mensuel évite les incompréhensions (« où est mon argent ? ») et permet de détecter tôt un impayé client pour relancer sans attendre." },
+  { jour: 10, cat: 'livr', titre: 'Suivi GPU',
+    note: 'État du co-investissement GPU reversé à 98 % au consultant',
+    info: "Donne au consultant la visibilité sur ce que génère son co-investissement GPU (BIC GreenEra). C'est un des piliers du modèle Launchpad : il doit pouvoir le suivre chaque mois." },
+];
+/* ============================================================ */
+
+const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const CATS = { social: 'Organismes sociaux', factu: 'Facturation', livr: 'Livrables consultants' };
+let cur = new Date(); cur.setDate(1);
+
+function esc(s){ const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+function tip(info){ return '<span class="tip" tabindex="0">i<span class="tipbox">' + esc(info) + '</span></span>'; }
+function lastDay(y, m){ return new Date(y, m + 1, 0).getDate(); }
+function resolve(ev, y, m){ return ev.jour === 'fin' ? lastDay(y, m) : Math.min(ev.jour, lastDay(y, m)); }
+
+function renderCal() {
+  const y = cur.getFullYear(), m = cur.getMonth();
+  document.getElementById('calTitle').textContent = MOIS[m] + ' ' + y;
+  const first = (new Date(y, m, 1).getDay() + 6) % 7; // lundi = 0
+  const nb = lastDay(y, m);
+  const today = new Date();
+  let html = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => '<div class="dow">' + d + '</div>').join('');
+  for (let i = 0; i < first; i++) html += '<div class="day off"></div>';
+  for (let d = 1; d <= nb; d++) {
+    const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+    const evs = EVENTS.filter(ev => resolve(ev, y, m) === d);
+    html += '<div class="day' + (isToday ? ' today' : '') + '"><span class="n">' + d + '</span>' +
+      evs.map(ev => '<span class="ev ' + ev.cat + '" title="' + esc(ev.note + ' — ' + ev.info) + '">' + esc(ev.titre) + '</span>').join('') + '</div>';
+  }
+  document.getElementById('cal').innerHTML = html;
+}
+
+function renderUpcoming() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const items = [];
+  for (let off = 0; off < 2; off++) { // ce mois + le suivant
+    const d0 = new Date(today.getFullYear(), today.getMonth() + off, 1);
+    EVENTS.forEach(ev => {
+      const d = new Date(d0.getFullYear(), d0.getMonth(), resolve(ev, d0.getFullYear(), d0.getMonth()));
+      if (d >= today) items.push({ ...ev, d });
+    });
+  }
+  items.sort((a, b) => a.d - b.d);
+  document.getElementById('upcoming').innerHTML = items.slice(0, 8).map(it => {
+    const j = Math.round((it.d - today) / 86400000);
+    const badge = j === 0 ? "aujourd'hui" : j === 1 ? 'demain' : 'dans ' + j + ' j';
+    return '<div class="up ' + it.cat + '"><span class="date">' + it.d.getDate() + ' ' + MOIS[it.d.getMonth()].slice(0,4) + '.</span>' +
+      '<span><span class="titre">' + esc(it.titre) + '</span>' + tip(it.info) + '<br><span class="note">' + esc(it.note) + '</span></span>' +
+      '<span class="badge">' + badge + '</span></div>';
+  }).join('');
+}
+
+function renderRecap() {
+  let html = '';
+  for (const cat of ['social','factu','livr']) {
+    html += '<div class="sec-title">' + CATS[cat] + '</div><table>' +
+      EVENTS.filter(e => e.cat === cat)
+        .sort((a,b) => (a.jour==='fin'?32:a.jour) - (b.jour==='fin'?32:b.jour))
+        .map(e => '<tr><td>' + (e.jour === 'fin' ? 'Fin de mois' : 'Le ' + e.jour) + '</td><td><strong>' + esc(e.titre) + '</strong>' + tip(e.info) + '<br><span style="color:var(--ink-soft);font-size:.8rem">' + esc(e.note) + '</span></td></tr>').join('') +
+      '</table>';
+  }
+  document.getElementById('recap').innerHTML = html;
+}
+
+document.getElementById('prev').addEventListener('click', () => { cur.setMonth(cur.getMonth() - 1); renderCal(); });
+document.getElementById('next').addEventListener('click', () => { cur.setMonth(cur.getMonth() + 1); renderCal(); });
+renderCal(); renderUpcoming(); renderRecap();
+</script>
