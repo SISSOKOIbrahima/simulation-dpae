@@ -1,0 +1,162 @@
+<!-- Launchpad — Assistant FAQ. Chatbot interne alimenté par IA via le relais Cloudflare. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241b12; --ink-soft:#4a3d2e; --paper:#f6f2ea; --card:#fffdf8; --line:#d8cfc0;
+    --ok:#3d6b35; --ok-bg:#e7efe2; --critique:#a02318; --critique-bg:#f7e6e3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Public Sans',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;display:flex;flex-direction:column}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 20px 20px;width:100%;display:flex;flex-direction:column;flex:1;min-height:0}
+  header{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap;gap:6px}
+  .wordmark{font-family:'Fraunces',serif;font-weight:900;font-size:1.35rem;letter-spacing:.04em}
+  .wordmark span{font-weight:500;letter-spacing:.12em;font-size:.8rem;text-transform:uppercase;color:var(--ink-soft);margin-left:10px}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(1.4rem,3vw,1.9rem);margin-bottom:4px}
+  .lede{color:var(--ink-soft);font-size:.9rem;margin-bottom:14px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .chip-q{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-size:.78rem;font-weight:600;color:var(--ink);cursor:pointer;font-family:'Public Sans',sans-serif}
+  .chip-q:hover{border-color:var(--ink)}
+  .chat{flex:1;min-height:280px;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:82%;padding:10px 14px;border-radius:10px;font-size:.9rem;white-space:pre-wrap}
+  .msg.user{align-self:flex-end;background:var(--ink);color:var(--paper);border-bottom-right-radius:3px}
+  .msg.bot{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:3px}
+  .msg.bot b{color:var(--ink)}
+  .typing{align-self:flex-start;font-size:.8rem;color:var(--ink-soft);padding:6px 14px;display:none}
+  .typing.on{display:block}
+  .inputrow{display:flex;gap:10px;margin-top:12px}
+  .inputrow input{flex:1;border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:.95rem;font-family:'Public Sans',sans-serif;background:#fff;color:var(--ink)}
+  .inputrow input:focus{outline:2px solid var(--ink);outline-offset:1px}
+  .inputrow button{background:var(--ink);color:var(--paper);border:none;border-radius:6px;padding:12px 22px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Public Sans',sans-serif}
+  .inputrow button:hover{opacity:.88}
+  .inputrow button:disabled{opacity:.45;cursor:default}
+  .disclaimer{font-size:.68rem;color:var(--ink-soft);text-align:center;margin-top:10px}
+  .error{display:none;background:var(--critique-bg);border:1px solid var(--critique);border-radius:4px;color:var(--critique);padding:10px 12px;font-size:.8rem;margin-top:10px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="wordmark">LAUNCHPAD<span>Assistant FAQ</span></div>
+    <div style="font-size:.75rem;color:var(--ink-soft)">Usage interne — RH &amp; consultants</div>
+  </header>
+
+  <h1>Une question ? Demande à l'assistant</h1>
+  <p class="lede">CRA, paie, SEP, DPAE, mutuelle, facturation… l'assistant connaît le fonctionnement de Launchpad et répond immédiatement.</p>
+
+  <div class="chips" id="chips">
+    <button class="chip-q">Quand dois-je envoyer mon CRA ?</button>
+    <button class="chip-q">Quand est versé mon salaire ?</button>
+    <button class="chip-q">C'est quoi la SEP ?</button>
+    <button class="chip-q">Comment fonctionne la mutuelle ?</button>
+    <button class="chip-q">C'est quoi le GPU ?</button>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="msg bot">Bonjour 👋 Je suis l'assistant Launchpad. Pose-moi n'importe quelle question sur ton contrat, ta paie, ton CRA, la SEP, la mutuelle ou le fonctionnement de Launchpad en général.</div>
+    <div class="typing" id="typing">L'assistant écrit…</div>
+  </div>
+  <div class="error" id="errorBox"></div>
+
+  <div class="inputrow">
+    <input type="text" id="q" placeholder="Écris ta question ici…" autocomplete="off">
+    <button id="send">Envoyer</button>
+  </div>
+  <p class="disclaimer">Assistant IA : les réponses sont données à titre indicatif. Pour toute situation particulière, contacte service-rh@launch-pad.fr.</p>
+</div>
+
+<script>
+/* Relais sécurisé Cloudflare (le même que la revue contractuelle) */
+const PROXY_URL = 'https://revue-contractuelle.direction-d75.workers.dev';
+
+/* ============================================================
+   BASE DE CONNAISSANCES — modifiable librement
+   ============================================================ */
+const CONTEXTE = `Tu es l'assistant FAQ interne de LAUNCHPAD, SAS de portage commercial / entrepreneurial (PAS de portage salarial) basée à Saint-Germain-en-Laye. Tu réponds aux questions de l'équipe RH et des consultants.
+
+MODÈLE LAUNCHPAD — le consultant a un triple statut :
+1. Salarié en CDI de Launchpad (salaire fixe, bulletin de paie via Payfit, convention Syntec IDCC 1486)
+2. Associé à 98 % d'une SEP (Société En Participation) — GreenEra en détient 2 %. Les bénéfices de la SEP (BNC) lui reviennent à 98 %
+3. Co-investisseur GPU : les revenus BIC GreenEra lui sont reversés à 98 %
+Documents SEP signés à l'onboarding : Convention SEP, mandat de représentation, mandat d'encaissement, mandat de facturation, Socle Juridique Commun.
+
+CYCLE MENSUEL :
+- CRA (compte rendu d'activité) : à remettre signé par le client entre le 20 et le 25 du mois. Relances automatiques Odoo les 20, 23 et 27. Sans CRA signé, impossible de facturer le client.
+- Facturation client : émise en fin de mois (avant le 30/31, max le 5 du mois suivant) par Launchpad au nom du consultant (mandat de facturation). Facturation SEP et GPU avec GreenEra.
+- Encaissement client : selon le délai du contrat (30, 45, 45 fin de mois, 60, jusqu'à 90 jours).
+- Salaire : versé en fin de mois via Payfit (terme échu, salaire ~J+35, fiche de paie ~J+30). Le bulletin est disponible sur Payfit.
+- Répartitions SEP (BNC 98 %) et GPU (BIC 98 %) : traitées après encaissement du paiement client, point de suivi vers le 10 du mois.
+
+ORGANISMES SOCIAUX :
+- DSN + URSSAF + prélèvement à la source : le 15 du mois (via Payfit). DSN néant obligatoire si aucune paie.
+- AGIRC-ARRCO (retraite complémentaire) : le 25.
+- Mutuelle santé AXA (contrat 2526391951000) et prévoyance AXA (2526391910000) : prélèvement mensuel. La mutuelle est obligatoire sauf cas de dispense légale (déjà couvert par la mutuelle du conjoint, etc.) — demander le formulaire de dispense au service RH.
+- Médecine du travail (SPST) : cotisation mensuelle, visite d'embauche obligatoire.
+- DPAE : faite par Launchpad auprès de l'URSSAF avant chaque embauche (au plus tard la veille du début du CDI).
+
+AVANTAGES : wallet MAY pour les avantages salariés.
+FISCALITÉ CONSULTANT : les revenus BNC/BIC bénéficient des abattements micro (34 % BNC, 50 % ou 71 % BIC selon nature) — orienter vers un expert-comptable pour les cas personnels.
+
+RÈGLES DE RÉPONSE :
+- Réponds en français, avec tutoiement, de façon concise et claire (3-6 phrases max sauf si on demande du détail).
+- Ne réponds que sur la base des informations ci-dessus et de connaissances RH/juridiques françaises générales fiables.
+- Si tu ne sais pas ou si c'est un cas personnel/sensible (litige, santé, situation fiscale précise), dis-le et oriente vers service-rh@launch-pad.fr.
+- Ne dis JAMAIS que Launchpad fait du portage salarial : c'est du portage commercial/entrepreneurial.`;
+
+const history = [];
+const $ = id => document.getElementById(id);
+
+function esc(s){ const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+function md(s){ return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+
+function addMsg(role, text) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = md(text);
+  $('chat').insertBefore(div, $('typing'));
+  $('chat').scrollTop = $('chat').scrollHeight;
+}
+
+async function ask(question) {
+  if (!question.trim()) return;
+  $('errorBox').style.display = 'none';
+  addMsg('user', question);
+  history.push({ role: 'user', content: question });
+  $('q').value = '';
+  $('send').disabled = true;
+  $('typing').classList.add('on');
+  $('chat').scrollTop = $('chat').scrollHeight;
+
+  try {
+    const messages = [
+      { role: 'user', content: CONTEXTE },
+      { role: 'assistant', content: "Compris. Je suis l'assistant FAQ Launchpad et je réponds selon ces règles." },
+      ...history
+    ];
+    const response = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message || 'Erreur');
+    const answer = data.content.map(i => i.type === 'text' ? i.text : '').join('');
+    history.push({ role: 'assistant', content: answer });
+    // garder un historique raisonnable (10 derniers échanges)
+    if (history.length > 20) history.splice(0, history.length - 20);
+    addMsg('bot', answer);
+  } catch (err) {
+    $('errorBox').textContent = "Désolé, je n'ai pas pu répondre : " + err.message + ' — Réessaie dans quelques instants.';
+    $('errorBox').style.display = 'block';
+  } finally {
+    $('send').disabled = false;
+    $('typing').classList.remove('on');
+    $('q').focus();
+  }
+}
+
+$('send').addEventListener('click', () => ask($('q').value));
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') ask($('q').value); });
+$('chips').querySelectorAll('.chip-q').forEach(btn =>
+  btn.addEventListener('click', () => ask(btn.textContent)));
+</script>
