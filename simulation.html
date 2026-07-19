@@ -24,13 +24,15 @@
   .lede{color:var(--ink-soft);max-width:640px;margin-bottom:24px}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:16px}
   .panel h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;margin-bottom:12px}
-  .inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:560px){.inputs-grid{grid-template-columns:1fr}}
+  .inputs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:700px){.inputs-grid{grid-template-columns:1fr}}
   .field{display:flex;flex-direction:column;gap:6px}
   .field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
   .field input,.field select{font-size:.95rem;font-family:'Public Sans',sans-serif;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px 12px;outline:none}
   .field input:focus,.field select:focus{outline:2px solid var(--ink);outline-offset:1px}
   .field select{cursor:pointer}
+  .btn-dl{margin-top:14px;background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:11px 20px;font-family:'Public Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s}
+  .btn-dl:hover{opacity:.88}
   .dpae-banner{background:var(--critique-bg);border:1px solid var(--critique);border-left:6px solid var(--critique);border-radius:6px;padding:18px 20px;margin-bottom:16px}
   .dpae-banner-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--critique);margin-bottom:4px}
   .dpae-banner-date{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;color:var(--critique);line-height:1.15;margin-bottom:4px;text-transform:capitalize}
@@ -131,7 +133,12 @@
           <option value="90|calendaire">90 jours</option>
         </select>
       </div>
+      <div class="field">
+        <label for="nomConsultant">Nom du consultant (pour le rapport)</label>
+        <input type="text" id="nomConsultant" placeholder="Ex. Brahim MOUNTASSIR" />
+      </div>
     </div>
+    <button class="btn-dl" id="dlRapport">📄 Télécharger le rapport consultant (PDF)</button>
   </div>
 
   <div id="output"></div>
@@ -436,6 +443,75 @@ function render() {
 document.getElementById('debut').addEventListener('input', render);
 document.getElementById('delai').addEventListener('change', render);
 render();
+
+/* ============ RAPPORT CONSULTANT TÉLÉCHARGEABLE ============ */
+document.getElementById('dlRapport').addEventListener('click', () => {
+  const nom = document.getElementById('nomConsultant').value.trim() || 'Consultant';
+  const debutStr = fmtShort(new Date(document.getElementById('debut').value));
+  const delaiStr = document.getElementById('delai').options[document.getElementById('delai').selectedIndex].text;
+
+  const catNom = { adm: 'Administratif', sal: 'Salaire', sep: 'Revenu SEP (BNC)', gpu: 'Revenu GPU (BIC)', enc: 'Encaissement client' };
+  const catCol = { adm: '#a02318', sal: '#8a6410', sep: '#3d6b35', gpu: '#2c4a6e', enc: '#5a5348' };
+
+  // Regrouper les échéances par mois
+  const parMois = {};
+  calEvents.forEach(e => {
+    const key = e.d.getFullYear() + '-' + String(e.d.getMonth()).padStart(2, '0');
+    (parMois[key] = parMois[key] || []).push(e);
+  });
+
+  const moisHtml = Object.keys(parMois).sort().map(key => {
+    const evs = parMois[key].sort((a, b) => a.d - b.d);
+    const titre = MOIS_FR[evs[0].d.getMonth()] + ' ' + evs[0].d.getFullYear();
+    return `
+      <h3 style="font-family:Georgia,serif;font-size:13pt;margin:18px 0 6px;text-transform:capitalize;border-bottom:2px solid #241b12;padding-bottom:3px">${titre}</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt">
+        ${evs.map(e => `
+          <tr style="border-bottom:1px solid #d8cfc0">
+            <td style="padding:5px 8px;width:52px;font-weight:bold;white-space:nowrap">${e.d.getDate()} ${MOIS_FR[e.d.getMonth()].slice(0,4)}.</td>
+            <td style="padding:5px 8px;width:130px;color:${catCol[e.cat]};font-weight:bold;font-size:8.5pt;text-transform:uppercase">${e.pay ? '⚠️ ' : ''}${catNom[e.cat]}</td>
+            <td style="padding:5px 8px"><strong>${esc(e.label)}</strong><br><span style="color:#5a5348;font-size:8.5pt">${esc(e.info || e.sub || '')}</span></td>
+          </tr>`).join('')}
+      </table>`;
+  }).join('');
+
+  const cardsHtml = Array.from(document.querySelectorAll('.metric')).map(m =>
+    '<div class="c"><b>' + m.querySelector('.metric-label').textContent + '</b><span>' + m.querySelector('.metric-value').textContent + '</span><div style="font-size:8pt;color:#5a5348">' + m.querySelector('.metric-sub').textContent + '</div></div>').join('');
+
+  const win = window.open('', '_blank');
+  if (!win) { alert("Le rapport n'a pas pu s'ouvrir : autorisez les pop-ups pour ce site (icône dans la barre d'adresse), puis réessayez."); return; }
+  win.document.write(`<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Échéancier revenus — ${esc(nom)}</title>
+<style>
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#241b12;margin:34px;line-height:1.5}
+  @media print{ body{margin:12mm} .noprint{display:none} }
+  h1{font-family:Georgia,serif;font-size:19pt;margin-bottom:2px}
+  h2{font-family:Georgia,serif;font-size:12pt;margin:16px 0 8px}
+  .head{border-bottom:3px solid #241b12;padding-bottom:10px;margin-bottom:14px}
+  .meta{font-size:9.5pt;color:#5a5348}
+  .cards{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
+  .c{border:1px solid #d8cfc0;border-radius:6px;padding:9px 13px;flex:1;min-width:150px}
+  .c b{display:block;font-size:8pt;text-transform:uppercase;color:#5a5348;letter-spacing:.05em}
+  .c span{font-family:Georgia,serif;font-size:12.5pt;font-weight:bold}
+  .rules{background:#f6f2ea;border:1px solid #d8cfc0;border-radius:6px;padding:11px 14px;font-size:8.8pt;color:#4a3d2e;margin-top:20px;line-height:1.6}
+  .foot{margin-top:22px;font-size:8pt;color:#5a5348;text-align:center;border-top:1px solid #d8cfc0;padding-top:8px}
+</style></head><body>
+  <div class="noprint" style="background:#e7efe2;border:1px solid #3d6b35;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:10pt">
+    💡 Pour enregistrer en PDF : <b>Ctrl+P</b> → Destination « Enregistrer au format PDF » → Enregistrer.
+    <button onclick="window.print()" style="margin-left:10px;padding:6px 14px;cursor:pointer">🖨️ Imprimer / PDF</button>
+  </div>
+  <div class="head">
+    <h1>LAUNCHPAD — Échéancier de revenus sur 1 an</h1>
+    <div class="meta"><b>${esc(nom)}</b> · Début de prestation : ${debutStr} · Délai de paiement client : ${delaiStr} · Édité le ${fmtShort(new Date())}</div>
+  </div>
+  <div class="cards">${cardsHtml}</div>
+  <h2>Détail mois par mois</h2>
+  ${moisHtml}
+  <div class="rules"><b>Rappel des règles :</b> ① L'encaissement client déclenche tout : d'abord le salaire, puis la SEP, puis le GPU. ② Le CDI démarre le 1er du mois suivant le début de prestation. ③ Salaire à terme échu : paie du mois M versée fin M+1 via Payfit. ④ Revenu SEP (BNC, 98 %) : un versement par mois de prestation, le 15. ⑤ GPU (BIC, 98 %) : investissement dès le 1er mois complet suivant le 1er revenu SEP, versements trimestriels (15 avr. / 15 juil. / 15 oct. / 15 janv.), le premier au prorata.</div>
+  <div class="foot">Document indicatif édité par SAS Launchpad, Saint-Germain-en-Laye — les dates d'encaissement dépendent du paiement effectif du client.</div>
+</body></html>`);
+  win.document.close();
+});
 </script>
 </body>
 </html>
