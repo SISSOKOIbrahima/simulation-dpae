@@ -100,7 +100,6 @@
   .badge-ok{background:var(--ok-bg);color:var(--ok)}
   .badge-blue{background:var(--blue-bg);color:var(--blue)}
   .rule{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:.78rem;color:var(--ink-soft);margin-top:14px;line-height:1.6}
-  /* ---- Historique ---- */
   .histo-bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
   .histo-bar input{flex:1;min-width:180px;border:1px solid var(--line);border-radius:4px;padding:9px 12px;font-size:.88rem;font-family:'Public Sans',sans-serif;background:#fff;color:var(--ink)}
   .histo-table{width:100%;border-collapse:collapse;font-size:.82rem}
@@ -186,7 +185,7 @@
       <summary>⚡ La DPAE et le décalage du CDI</summary>
       <div class="txt">
         <p><strong>La DPAE</strong> (Déclaration Préalable À l'Embauche) est une obligation légale : Launchpad doit déclarer chaque embauche à l'URSSAF <strong>avant</strong> le début du contrat, au plus tard la veille du premier jour du CDI. Sans DPAE, l'embauche est irrégulière (travail dissimulé) — c'est pour ça qu'elle est marquée « action prioritaire » dans la simulation.</p>
-        <p><strong>Pourquoi le CDI ne démarre pas le jour de la prestation ?</strong> Deux raisons. ① On ne salarie jamais un mois entamé : si le consultant commence sa mission le 28 du mois, ces quelques jours passent par la facturation SEP mais ne donnent pas lieu à un mois de salariat — le CDI démarre le 1er du mois suivant. ② Le modèle Launchpad cale l'entrée en CDI sur le cycle d'encaissement client : le client paie à 30, 45, 60 ou 90 jours après la facture, et c'est cet encaissement qui finance le salaire. Ce décalage garantit que chaque salaire versé est couvert par la trésorerie de la mission — c'est ce qui rend le modèle solide et pérenne pour le consultant.</p>
+        <p><strong>Pourquoi le CDI ne démarre pas toujours le jour de la prestation ?</strong> Règle Launchpad : on ne salarie jamais un mois entamé. Si le consultant commence sa mission en cours de mois (ex. le 28, ou même le 10), le CDI et la DPAE sont reportés au 1er du mois suivant — et les jours travaillés du mois partiel lui sont reversés <strong>à 100 % via la SEP</strong>, pas en salaire. S'il commence le 1er du mois, le CDI peut démarrer ce mois-là. Par ailleurs, l'entrée en CDI reste calée sur le cycle d'encaissement client (30 à 90 jours) : c'est cet encaissement qui finance le salaire, ce qui garantit que chaque salaire versé est couvert par la trésorerie de la mission.</p>
       </div>
     </details>
 
@@ -201,7 +200,7 @@
     <details>
       <summary>📈 Le revenu SEP (BNC)</summary>
       <div class="txt">
-        <p>Chaque consultant est <strong>associé à 98 %</strong> d'une SEP (Société En Participation) créée pour lui, GreenEra détenant les 2 % restants. C'est la SEP qui porte l'activité commerciale de la mission : Launchpad facture le client au nom du consultant (mandat de facturation), encaisse (mandat d'encaissement), et reverse à la SEP le chiffre d'affaires restant après le salaire et les charges.</p>
+        <p>Chaque consultant est <strong>associé à 98 %</strong> d'une SEP (Société En Participation) créée pour lui, GreenEra détenant les 2 % restants. C'est la SEP qui porte l'activité commerciale de la mission : Launchpad facture le client au nom du consultant (mandat de facturation), encaisse (mandat d'encaissement), et reverse à la SEP le chiffre d'affaires restant après le salaire et les charges. Les jours travaillés d'un <strong>mois de démarrage entamé</strong> passent intégralement par la SEP.</p>
         <p>Les bénéfices de la SEP sont reversés au consultant à 98 % sous forme de <strong>revenus BNC</strong> (bénéfices non commerciaux), qui bénéficient de l'abattement fiscal du régime micro. Le versement suit un <strong>rythme mensuel régulier, le 15 du mois</strong>, calé sur l'encaissement client : prestation de juillet → facture fin juillet → encaissement selon le délai client → SEP le 15 du mois suivant, puis un versement chaque mois pour chaque mois de prestation.</p>
       </div>
     </details>
@@ -264,7 +263,7 @@ function tlRow(dotClass, emoji, date, label, sub, badge) {
 
 let calEvents = [];
 let calCur = null;
-let lastCalc = null; // dernières dates clés calculées (pour l'enregistrement)
+let lastCalc = null;
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
 function renderCalendar() {
@@ -299,10 +298,17 @@ function render() {
   const debutPresta = new Date(val);
   const finMoisPresta = endOfMonth(debutPresta);
   const paiement1 = calcEncaissement(finMoisPresta, jours, type);
+  const moisEntame = debutPresta.getDate() !== 1;
 
-  /* RÈGLE CDI : 1er du mois précédant le 1er encaissement, jamais avant le 1er du mois suivant la presta */
+  /* ---- RÈGLE CDI LAUNCHPAD ----
+     - Mois entamé (début après le 1er, même 10 jours travaillés) → CDI et DPAE reportés
+       au 1er du mois suivant ; les jours du mois partiel sont reversés à 100 % via la SEP.
+     - Début le 1er du mois → mois complet, le CDI peut démarrer ce mois-là.
+     - Et jamais avant : le 1er du mois précédant le 1er encaissement client. */
   const cdiEncaissement = new Date(paiement1.getFullYear(), paiement1.getMonth() - 1, 1);
-  const cdiApresPresta = new Date(debutPresta.getFullYear(), debutPresta.getMonth() + 1, 1);
+  const cdiApresPresta = moisEntame
+    ? new Date(debutPresta.getFullYear(), debutPresta.getMonth() + 1, 1)
+    : new Date(debutPresta.getFullYear(), debutPresta.getMonth(), 1);
   const debutCdi = cdiEncaissement > cdiApresPresta ? cdiEncaissement : cdiApresPresta;
   const dpaeLimit = addDays(debutCdi, -1);
 
@@ -315,16 +321,19 @@ function render() {
   const events = [];
 
   events.push({ d: debutPresta, dot: 'dot-gray', cat: 'adm', emoji: '📄', court: 'Début presta',
-    label: 'Début prestation client', sub: 'Convention SEP + mandats signés en amont',
-    info: "Le consultant démarre sa mission chez le client. À ce stade il n'est pas encore salarié : la Convention SEP et les mandats doivent être signés en amont." });
+    label: 'Début prestation client',
+    sub: moisEntame ? 'Mois entamé : jours du mois reversés à 100 % via la SEP' : 'Convention SEP + mandats signés en amont',
+    info: moisEntame
+      ? "Le consultant démarre sa mission en cours de mois : les jours travaillés de ce mois partiel lui sont reversés à 100 % via la SEP — pas de salaire sur un mois entamé. Convention SEP et mandats signés en amont."
+      : "Le consultant démarre sa mission chez le client le 1er du mois : mois complet, le CDI peut démarrer ce mois-là. Convention SEP et mandats signés en amont." });
   events.push({ d: dpaeLimit, dot: 'dot-critique', cat: 'adm', emoji: '⚡', court: 'DPAE ⚡',
     label: 'DPAE à envoyer (limite légale)', sub: 'Veille du début CDI',
     info: "Déclaration Préalable À l'Embauche auprès de l'URSSAF — obligation légale AVANT le début du CDI, au plus tard la veille. Sans DPAE, l'embauche est irrégulière.",
     badge: { cls: 'badge-critique', txt: 'Action prioritaire' } });
   events.push({ d: debutCdi, dot: 'dot-critique', cat: 'adm', emoji: '👤', court: 'Début CDI',
     label: 'Début CDI — entrée comme salarié',
-    sub: '1er du mois suivant le début de prestation (jamais un mois entamé)',
-    info: "Le consultant devient salarié Launchpad. Règle : le CDI démarre le 1er du mois suivant le début de prestation — un mois entamé de quelques jours ne donne pas lieu à salariat." });
+    sub: moisEntame ? 'Reporté au 1er du mois suivant (mois de début entamé)' : 'Début de prestation le 1er : CDI ce mois-ci',
+    info: "Le consultant devient salarié Launchpad. Règle : si le mois de début est entamé (ex. 10 jours travaillés), le CDI et la DPAE sont reportés au 1er du mois suivant — les jours du mois partiel sont payés à 100 % via la SEP, pas en salaire. S'il démarre le 1er, le CDI peut commencer ce mois-là." });
 
   // Salaires sur 1 an
   for (let n = 0; n < DUREE + 2; n++) {
@@ -346,6 +355,7 @@ function render() {
     if (facture > horizon) break;
     const enc = calcEncaissement(facture, jours, type);
     const sep = new Date(moisPresta.getFullYear(), moisPresta.getMonth() + sepOffset, 15);
+    const partiel = n === 0 && moisEntame;
     if (enc <= horizon) {
       events.push({ d: enc, dot: 'dot-gray', cat: 'enc', emoji: '🏦',
         court: 'Encaiss. ' + moisNom(moisPresta),
@@ -356,14 +366,18 @@ function render() {
     if (sep <= horizon) {
       events.push({ d: sep, dot: 'dot-ok', cat: 'sep', emoji: '📈', pay: true,
         court: 'SEP ' + moisNom(moisPresta),
-        label: `Revenu SEP (BNC) — prestation ${deMois(moisPresta)}`,
-        sub: 'Rythme mensuel régulier, le 15 — 98 % consultant',
-        info: `Reversement des bénéfices de la SEP (BNC) pour la prestation ${deMois(moisPresta)} : 98 % pour le consultant, 2 % GreenEra. Versement mensuel régulier le 15, une fois l'encaissement client reçu.`,
+        label: `Revenu SEP (BNC) — prestation ${deMois(moisPresta)}${partiel ? ' (mois entamé)' : ''}`,
+        sub: partiel
+          ? 'Mois de démarrage entamé : jours travaillés reversés à 100 % via la SEP'
+          : 'Rythme mensuel régulier, le 15 — 98 % consultant',
+        info: partiel
+          ? `Reversement SEP de la prestation ${deMois(moisPresta)} : mois de démarrage entamé, les jours travaillés sont reversés intégralement via la SEP (pas de salaire sur ce mois). 98 % consultant, 2 % GreenEra.`
+          : `Reversement des bénéfices de la SEP (BNC) pour la prestation ${deMois(moisPresta)} : 98 % pour le consultant, 2 % GreenEra. Versement mensuel régulier le 15, une fois l'encaissement client reçu.`,
         badge: n === 0 ? { cls: 'badge-ok', txt: '1er revenu SEP' } : null });
     }
   }
 
-  // GPU : investissement dès le 1er du mois suivant le 1er revenu SEP, puis tous les versements trimestriels
+  // GPU : investissement dès le 1er du mois suivant le 1er revenu SEP, puis versements trimestriels
   const investStart = new Date(sep1.getFullYear(), sep1.getMonth() + 1, 1);
   const qInvest = Math.floor(investStart.getMonth() / 3);
   events.push({ d: investStart, dot: 'dot-blue', cat: 'gpu', emoji: '🚀',
@@ -406,14 +420,14 @@ function render() {
     <div class="dpae-banner">
       <div class="dpae-banner-label">⚡ DPAE à effectuer avant le</div>
       <div class="dpae-banner-date">${fmtLong(dpaeLimit)}</div>
-      <div class="dpae-banner-sub">Veille du début CDI (${fmtShort(debutCdi)}) — délai légal impératif</div>
+      <div class="dpae-banner-sub">Veille du début CDI (${fmtShort(debutCdi)}) — délai légal impératif${moisEntame ? ' · Mois de début entamé : jours du mois reversés à 100 % via la SEP' : ''}</div>
     </div>
 
     <div class="metrics-grid">
       <div class="metric">
         <div class="metric-label">Début CDI</div>
         <div class="metric-value">${fmtShort(debutCdi)}</div>
-        <div class="metric-sub">1er du mois suivant le début de prestation</div>
+        <div class="metric-sub">${moisEntame ? 'Reporté : mois de début entamé' : 'Début le 1er : CDI ce mois-ci'}</div>
       </div>
       <div class="metric">
         <div class="metric-label">1er salaire</div>
@@ -465,7 +479,7 @@ function render() {
     <div class="rule">
       <strong>Rappel des règles :</strong>
       ① L'encaissement client déclenche tout : d'abord le salaire, puis la SEP, puis le GPU.
-      ② CDI : démarre le 1er du mois suivant le début de prestation — un mois entamé de quelques jours ne donne pas lieu à salariat.
+      ② CDI : mois de début entamé (même 10 jours travaillés) → CDI et DPAE reportés au 1er du mois suivant, et les jours du mois partiel sont reversés à 100 % via la SEP. Début le 1er du mois → le CDI peut démarrer ce mois-là.
       ③ Salaire : paie du mois M versée le dernier jour du mois M+1 (terme échu), tous les mois.
       ④ Revenu SEP : un versement par mois de prestation, le 15, à rythme régulier calé sur le délai d'encaissement client.
       ⑤ GPU : l'investissement via la SEP démarre le 1er du mois qui suit le premier revenu SEP (1 mois complet minimum) ; versements trimestriels — 15 avril (T1), 15 juillet (T2), 15 octobre (T3), 15 janvier (T4) — le premier au prorata, puis chaque trimestre complet.
@@ -524,7 +538,6 @@ function renderHistorique() {
       }
       return;
     }
-    // Recharger (et éventuellement générer le rapport)
     document.getElementById('prenomConsultant').value = sim.prenom;
     document.getElementById('nomConsultant').value = sim.nom;
     document.getElementById('debut').value = sim.debut;
@@ -626,7 +639,7 @@ document.getElementById('dlRapport').addEventListener('click', () => {
   <div class="cards">${cardsHtml}</div>
   <h2>Détail mois par mois</h2>
   ${moisHtml}
-  <div class="rules"><b>Rappel des règles :</b> ① L'encaissement client déclenche tout : d'abord le salaire, puis la SEP, puis le GPU. ② Le CDI démarre le 1er du mois suivant le début de prestation. ③ Salaire à terme échu : paie du mois M versée fin M+1 via Payfit. ④ Revenu SEP (BNC, 98 %) : un versement par mois de prestation, le 15. ⑤ GPU (BIC, 98 %) : investissement dès le 1er mois complet suivant le 1er revenu SEP, versements trimestriels (15 avr. / 15 juil. / 15 oct. / 15 janv.), le premier au prorata.</div>
+  <div class="rules"><b>Rappel des règles :</b> ① L'encaissement client déclenche tout : d'abord le salaire, puis la SEP, puis le GPU. ② Mois de début entamé → CDI et DPAE reportés au 1er du mois suivant, jours du mois partiel reversés à 100 % via la SEP ; début le 1er → le CDI peut démarrer ce mois-là. ③ Salaire à terme échu : paie du mois M versée fin M+1 via Payfit. ④ Revenu SEP (BNC, 98 %) : un versement par mois de prestation, le 15. ⑤ GPU (BIC, 98 %) : investissement dès le 1er mois complet suivant le 1er revenu SEP, versements trimestriels (15 avr. / 15 juil. / 15 oct. / 15 janv.), le premier au prorata.</div>
   <div class="foot">Document indicatif édité par SAS Launchpad, Saint-Germain-en-Laye — les dates d'encaissement dépendent du paiement effectif du client.</div>
 </body></html>`);
   win.document.close();
