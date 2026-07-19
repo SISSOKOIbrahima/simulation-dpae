@@ -24,8 +24,8 @@
   .lede{color:var(--ink-soft);max-width:640px;margin-bottom:24px}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:16px}
   .panel h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;margin-bottom:12px}
-  .inputs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-  @media(max-width:700px){.inputs-grid{grid-template-columns:1fr}}
+  .inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.inputs-grid{grid-template-columns:1fr}}
   .field{display:flex;flex-direction:column;gap:6px}
   .field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
   .field input,.field select{font-size:.95rem;font-family:'Public Sans',sans-serif;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px 12px;outline:none}
@@ -48,10 +48,8 @@
   .lg-gpu{background:var(--blue-bg);color:var(--blue)}
   .lg-adm{background:var(--critique-bg);color:var(--critique)}
   .lg-pay{background:var(--ink);color:var(--paper)}
-  /* ---- Disposition calendrier + échéancier ---- */
   .duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
   @media(max-width:900px){.duo{grid-template-columns:1fr}}
-  /* ---- Calendrier ---- */
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .cal-head button{background:none;border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;font-size:.9rem;color:var(--ink);font-family:'Public Sans',sans-serif}
   .cal-head button:hover{border-color:var(--ink)}
@@ -68,7 +66,6 @@
   .ev.gpu{background:var(--blue-bg);color:var(--blue)}
   .ev.enc{background:var(--paper);color:var(--ink-soft);border:1px dashed var(--line)}
   .ev .i{display:inline-block;font-style:normal;font-weight:700;opacity:.75}
-  /* Bulle ⓘ au survol */
   .ev .evtip{display:none;position:absolute;bottom:115%;left:50%;transform:translateX(-50%);width:230px;background:var(--ink);color:var(--paper);padding:9px 11px;border-radius:6px;font-size:.68rem;font-weight:400;line-height:1.45;z-index:30;box-shadow:0 6px 18px rgba(36,27,18,.3);white-space:normal;pointer-events:none}
   .ev .evtip b{display:block;margin-bottom:3px}
   .ev .evtip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink)}
@@ -78,7 +75,6 @@
   .day:nth-child(7n) .evtip,.day:nth-child(7n-1) .evtip{left:auto;right:0;transform:none}
   .day:nth-child(7n) .evtip::after,.day:nth-child(7n-1) .evtip::after{left:auto;right:20px;transform:none}
   .cal-hint{font-size:.68rem;color:var(--ink-soft);margin-top:8px}
-  /* ---- Échéancier (lignes, déroulant) ---- */
   .tl-scroll{max-height:640px;overflow-y:auto;padding-right:6px}
   .timeline{position:relative}
   .timeline::before{content:'';position:absolute;left:15px;top:8px;bottom:8px;width:1px;background:var(--line)}
@@ -98,7 +94,6 @@
   .badge-ok{background:var(--ok-bg);color:var(--ok)}
   .badge-blue{background:var(--blue-bg);color:var(--blue)}
   .rule{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:.78rem;color:var(--ink-soft);margin-top:14px;line-height:1.6}
-  /* ---- Principes (volets dépliables) ---- */
   .principes details{border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin-bottom:10px;background:#fff}
   .principes summary{cursor:pointer;font-weight:700;font-size:.92rem}
   .principes .txt{font-size:.85rem;color:var(--ink-soft);margin-top:10px;line-height:1.65}
@@ -116,7 +111,7 @@
   </header>
 
   <h1>Simulation DPAE &amp; revenus consultant</h1>
-  <p class="lede">Renseignez la date de début de prestation, le délai de paiement client et la durée : la simulation donne la DPAE, le début du CDI, puis toutes les échéances de revenus du consultant mois par mois (salaire, SEP et GPU). Le symbole ⚠️ signale un paiement à faire au consultant.</p>
+  <p class="lede">Renseignez la date de début de prestation et le délai de paiement client : la simulation donne la DPAE, le début du CDI, puis toutes les échéances de revenus du consultant sur <strong>1 an</strong> (salaires, SEP et GPU). Le symbole ⚠️ signale un paiement à faire au consultant.</p>
 
   <div class="panel">
     <h2>Paramètres</h2>
@@ -134,15 +129,6 @@
           <option value="45|fin_de_mois">45 jours fin de mois</option>
           <option value="60|calendaire">60 jours</option>
           <option value="90|calendaire">90 jours</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="duree">Durée de simulation</label>
-        <select id="duree">
-          <option value="6">6 mois</option>
-          <option value="12" selected>12 mois</option>
-          <option value="18">18 mois</option>
-          <option value="24">24 mois</option>
         </select>
       </div>
     </div>
@@ -174,7 +160,7 @@
       <summary>📈 Le revenu SEP (BNC)</summary>
       <div class="txt">
         <p>Chaque consultant est <strong>associé à 98 %</strong> d'une SEP (Société En Participation) créée pour lui, GreenEra détenant les 2 % restants. C'est la SEP qui porte l'activité commerciale de la mission : Launchpad facture le client au nom du consultant (mandat de facturation), encaisse (mandat d'encaissement), et reverse à la SEP le chiffre d'affaires restant après le salaire et les charges.</p>
-        <p>Les bénéfices de la SEP sont reversés au consultant à 98 % sous forme de <strong>revenus BNC</strong> (bénéfices non commerciaux), qui bénéficient de l'abattement fiscal du régime micro. Le versement intervient <strong>le 15 du mois suivant l'encaissement client</strong> : prestation de juillet → facture fin juillet → encaissement selon le délai client → SEP le 15 du mois d'après. C'est la partie variable et optimisée de la rémunération, directement liée au chiffre d'affaires de la mission — et elle tombe <strong>chaque mois</strong>, tant que la mission court.</p>
+        <p>Les bénéfices de la SEP sont reversés au consultant à 98 % sous forme de <strong>revenus BNC</strong> (bénéfices non commerciaux), qui bénéficient de l'abattement fiscal du régime micro. Le versement suit un <strong>rythme mensuel régulier, le 15 du mois</strong>, calé sur l'encaissement client : prestation de juillet → facture fin juillet → encaissement selon le délai client → SEP le 15 du mois suivant, puis un versement chaque mois pour chaque mois de prestation.</p>
       </div>
     </details>
 
@@ -191,6 +177,8 @@
 </div>
 
 <script>
+const DUREE = 12; // simulation sur 1 an
+
 function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0); }
 function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
 function addMonths(d, n) { const r = new Date(d); r.setMonth(r.getMonth() + n); return r; }
@@ -198,7 +186,6 @@ function fmtLong(d) { return d.toLocaleDateString('fr-FR', { weekday: 'long', da
 function fmtShort(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function moisNom(d) { return d.toLocaleDateString('fr-FR', { month: 'long' }); }
 function moisAn(d) { return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }); }
-/* "d'août" / "de juillet" selon la première lettre */
 function deMois(d) { const m = moisNom(d); return /^[aeiouâàéè]/i.test(m) ? "d'" + m : "de " + m; }
 function esc(s){ const el = document.createElement('div'); el.textContent = s ?? ''; return el.innerHTML; }
 
@@ -207,11 +194,6 @@ function calcEncaissement(dateFacture, jours, type) {
   return addDays(dateFacture, jours);
 }
 
-/* Revenu SEP : versé le 15 du mois suivant l'encaissement client */
-function sepDate(encaissement) { return new Date(encaissement.getFullYear(), encaissement.getMonth() + 1, 15); }
-
-/* GPU : trimestres civils. Un versement le 15 du mois M paie le trimestre qui se termine le mois précédent :
-   15 janvier → T4 (année précédente), 15 avril → T1, 15 juillet → T2, 15 octobre → T3 */
 const TRIMESTRES = [
   { code: 'T1', nom: 'T1 (janvier-mars)' }, { code: 'T2', nom: 'T2 (avril-juin)' },
   { code: 'T3', nom: 'T3 (juillet-septembre)' }, { code: 'T4', nom: 'T4 (octobre-décembre)' }
@@ -222,7 +204,6 @@ function firstGpuPayout(investStart) {
     ? new Date(investStart.getFullYear() + 1, 0, 15)
     : new Date(investStart.getFullYear(), (q + 1) * 3, 15);
 }
-/* Trimestre payé par un versement donné (le trimestre qui vient de se terminer) */
 function trimestreOfPayout(payout) {
   return payout.getMonth() === 0 ? 3 : Math.floor(payout.getMonth() / 3) - 1;
 }
@@ -239,7 +220,6 @@ function tlRow(dotClass, emoji, date, label, sub, badge) {
   </div>`;
 }
 
-/* ---- État du calendrier ---- */
 let calEvents = [];
 let calCur = null;
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
@@ -248,7 +228,7 @@ function renderCalendar() {
   if (!calCur) return;
   const y = calCur.getFullYear(), m = calCur.getMonth();
   document.getElementById('calTitle').textContent = MOIS_FR[m] + ' ' + y;
-  const first = (new Date(y, m, 1).getDay() + 6) % 7; // lundi = 0
+  const first = (new Date(y, m, 1).getDay() + 6) % 7;
   const nb = endOfMonth(new Date(y, m, 1)).getDate();
   let html = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => '<div class="dow">' + d + '</div>').join('');
   for (let i = 0; i < first; i++) html += '<div class="day off"></div>';
@@ -267,7 +247,6 @@ function renderCalendar() {
 function render() {
   const val = document.getElementById('debut').value;
   const selectVal = document.getElementById('delai').value;
-  const duree = parseInt(document.getElementById('duree').value);
   if (!val) return;
 
   const [joursStr, type] = selectVal.split('|');
@@ -278,21 +257,18 @@ function render() {
   const finMoisPresta = endOfMonth(debutPresta);
   const paiement1 = calcEncaissement(finMoisPresta, jours, type);
 
-  /* ---- RÈGLE CDI LAUNCHPAD ----
-     Le CDI démarre le 1er du mois précédant le 1er encaissement client,
-     MAIS jamais avant le 1er du mois suivant le début de prestation :
-     un mois entamé (quelques jours travaillés) ne donne pas lieu à salariat. */
+  /* RÈGLE CDI : 1er du mois précédant le 1er encaissement, jamais avant le 1er du mois suivant la presta */
   const cdiEncaissement = new Date(paiement1.getFullYear(), paiement1.getMonth() - 1, 1);
   const cdiApresPresta = new Date(debutPresta.getFullYear(), debutPresta.getMonth() + 1, 1);
   const debutCdi = cdiEncaissement > cdiApresPresta ? cdiEncaissement : cdiApresPresta;
   const dpaeLimit = addDays(debutCdi, -1);
 
-  /* Horizon de simulation */
-  const horizon = addMonths(debutPresta, duree);
+  /* RYTHME SEP RÉGULIER : 1er versement le 15 du mois suivant le 1er encaissement,
+     puis UN versement par mois, chaque 15, pour chaque mois de prestation. */
+  const sep1 = new Date(paiement1.getFullYear(), paiement1.getMonth() + 1, 15);
+  const sepOffset = (sep1.getFullYear() - debutPresta.getFullYear()) * 12 + (sep1.getMonth() - debutPresta.getMonth());
 
-  /* ---- Échéances ----
-     pay: true = paiement que Launchpad doit faire au consultant (⚠️)
-     info : explication affichée dans la bulle ⓘ */
+  const horizon = addMonths(debutPresta, DUREE);
   const events = [];
 
   events.push({ d: debutPresta, dot: 'dot-gray', cat: 'adm', emoji: '📄', court: 'Début presta',
@@ -307,8 +283,8 @@ function render() {
     sub: '1er du mois suivant le début de prestation (jamais un mois entamé)',
     info: "Le consultant devient salarié Launchpad. Règle : le CDI démarre le 1er du mois suivant le début de prestation — un mois entamé de quelques jours ne donne pas lieu à salariat." });
 
-  // Salaires : paie du mois M versée le dernier jour du mois M+1, tous les mois jusqu'à l'horizon
-  for (let n = 0; n < duree + 2; n++) {
+  // Salaires sur 1 an
+  for (let n = 0; n < DUREE + 2; n++) {
     const moisPaie = addMonths(debutCdi, n);
     const versement = endOfMonth(addMonths(debutCdi, n + 1));
     if (versement > horizon) break;
@@ -320,15 +296,13 @@ function render() {
       badge: n === 0 ? { cls: 'badge-ok', txt: '1er revenu salaire' } : null });
   }
 
-  // Revenus SEP : prestation du mois M → facture fin M → encaissement (délai client) → SEP le 15 du mois suivant, tous les mois
-  let sep1 = null;
-  for (let n = 0; n < duree + 2; n++) {
+  // Encaissements clients (dates exactes) + revenus SEP (rythme mensuel régulier, le 15) sur 1 an
+  for (let n = 0; n < DUREE + 2; n++) {
     const moisPresta = addMonths(debutPresta, n);
     const facture = endOfMonth(moisPresta);
-    const enc = calcEncaissement(facture, jours, type);
-    const sep = sepDate(enc);
-    if (n === 0) sep1 = sep;
     if (facture > horizon) break;
+    const enc = calcEncaissement(facture, jours, type);
+    const sep = new Date(moisPresta.getFullYear(), moisPresta.getMonth() + sepOffset, 15);
     if (enc <= horizon) {
       events.push({ d: enc, dot: 'dot-gray', cat: 'enc', emoji: '🏦',
         court: 'Encaiss. ' + moisNom(moisPresta),
@@ -340,14 +314,13 @@ function render() {
       events.push({ d: sep, dot: 'dot-ok', cat: 'sep', emoji: '📈', pay: true,
         court: 'SEP ' + moisNom(moisPresta),
         label: `Revenu SEP (BNC) — prestation ${deMois(moisPresta)}`,
-        sub: 'Versé le 15 du mois suivant l\'encaissement — 98 % consultant',
-        info: `Reversement des bénéfices de la SEP (BNC) pour la prestation ${deMois(moisPresta)} : 98 % pour le consultant, 2 % GreenEra. Versé le 15 du mois suivant l'encaissement client.`,
+        sub: 'Rythme mensuel régulier, le 15 — 98 % consultant',
+        info: `Reversement des bénéfices de la SEP (BNC) pour la prestation ${deMois(moisPresta)} : 98 % pour le consultant, 2 % GreenEra. Versement mensuel régulier le 15, une fois l'encaissement client reçu.`,
         badge: n === 0 ? { cls: 'badge-ok', txt: '1er revenu SEP' } : null });
     }
   }
 
-  // GPU : investissement à partir du 1er du mois suivant le 1er revenu SEP (minimum 1 mois complet),
-  // puis versements trimestriels récurrents jusqu'à l'horizon
+  // GPU : investissement dès le 1er du mois suivant le 1er revenu SEP, puis tous les versements trimestriels de l'année
   const investStart = new Date(sep1.getFullYear(), sep1.getMonth() + 1, 1);
   const qInvest = Math.floor(investStart.getMonth() / 3);
   events.push({ d: investStart, dot: 'dot-blue', cat: 'gpu', emoji: '🚀',
@@ -360,7 +333,7 @@ function render() {
   let firstGpu = null;
   let gpuIdx = 0;
   while (gpuPay <= horizon || gpuIdx === 0) {
-    if (gpuPay > addMonths(horizon, 3)) break; // sécurité
+    if (gpuPay > addMonths(horizon, 3)) break;
     const t = trimestreOfPayout(gpuPay);
     const isFirst = gpuIdx === 0;
     if (isFirst) firstGpu = { payout: gpuPay, t };
@@ -382,7 +355,6 @@ function render() {
 
   events.sort((a, b) => a.d - b.d);
 
-  /* ---- Calendrier : mois de départ = mois de la DPAE ---- */
   calEvents = events;
   calCur = new Date(dpaeLimit.getFullYear(), dpaeLimit.getMonth(), 1);
 
@@ -407,7 +379,7 @@ function render() {
       <div class="metric">
         <div class="metric-label">1er revenu SEP (BNC)</div>
         <div class="metric-value">${fmtShort(sep1)}</div>
-        <div class="metric-sub">Prestation ${deMois(debutPresta)}</div>
+        <div class="metric-sub">Prestation ${deMois(debutPresta)} — puis chaque 15 du mois</div>
       </div>
       <div class="metric">
         <div class="metric-label">1er revenu GPU</div>
@@ -437,7 +409,7 @@ function render() {
       </div>
 
       <div class="panel">
-        <div class="sec-title">Échéancier détaillé (${duree} mois)</div>
+        <div class="sec-title">Échéancier détaillé sur 1 an</div>
         <div class="tl-scroll">
           <div class="timeline">
             ${events.map(e => tlRow(e.dot, (e.pay ? '⚠️' : e.emoji), e.d, (e.pay ? '⚠️ ' : '') + e.label, e.sub, e.badge)).join('')}
@@ -451,7 +423,7 @@ function render() {
       ① L'encaissement client déclenche tout : d'abord le salaire, puis la SEP, puis le GPU.
       ② CDI : démarre le 1er du mois suivant le début de prestation — un mois entamé de quelques jours ne donne pas lieu à salariat.
       ③ Salaire : paie du mois M versée le dernier jour du mois M+1 (terme échu), tous les mois.
-      ④ Revenu SEP : prestation du mois M facturée fin M, encaissée selon le délai client, versée le 15 du mois suivant l'encaissement — tous les mois.
+      ④ Revenu SEP : un versement par mois de prestation, le 15, à rythme régulier calé sur le délai d'encaissement client.
       ⑤ GPU : l'investissement via la SEP démarre le 1er du mois qui suit le premier revenu SEP (1 mois complet minimum) ; versements trimestriels — 15 avril (T1), 15 juillet (T2), 15 octobre (T3), 15 janvier (T4) — le premier au prorata, puis chaque trimestre complet.
     </div>
   `;
@@ -463,7 +435,6 @@ function render() {
 
 document.getElementById('debut').addEventListener('input', render);
 document.getElementById('delai').addEventListener('change', render);
-document.getElementById('duree').addEventListener('change', render);
 render();
 </script>
 </body>
