@@ -24,15 +24,19 @@
   .lede{color:var(--ink-soft);max-width:640px;margin-bottom:24px}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:16px}
   .panel h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;margin-bottom:12px}
-  .inputs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-  @media(max-width:700px){.inputs-grid{grid-template-columns:1fr}}
+  .inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .inputs-grid.four{grid-template-columns:1fr 1fr 1fr 1fr}
+  @media(max-width:860px){.inputs-grid,.inputs-grid.four{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.inputs-grid,.inputs-grid.four{grid-template-columns:1fr}}
   .field{display:flex;flex-direction:column;gap:6px}
   .field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
   .field input,.field select{font-size:.95rem;font-family:'Public Sans',sans-serif;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px 12px;outline:none}
   .field input:focus,.field select:focus{outline:2px solid var(--ink);outline-offset:1px}
   .field select{cursor:pointer}
-  .btn-dl{margin-top:14px;background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:11px 20px;font-family:'Public Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s}
-  .btn-dl:hover{opacity:.88}
+  .btn{background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:11px 20px;font-family:'Public Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s}
+  .btn:hover{opacity:.88}
+  .btn.ghost{background:none;color:var(--ink);border:1px solid var(--ink)}
+  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
   .dpae-banner{background:var(--critique-bg);border:1px solid var(--critique);border-left:6px solid var(--critique);border-radius:6px;padding:18px 20px;margin-bottom:16px}
   .dpae-banner-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--critique);margin-bottom:4px}
   .dpae-banner-date{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;color:var(--critique);line-height:1.15;margin-bottom:4px;text-transform:capitalize}
@@ -96,6 +100,19 @@
   .badge-ok{background:var(--ok-bg);color:var(--ok)}
   .badge-blue{background:var(--blue-bg);color:var(--blue)}
   .rule{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:.78rem;color:var(--ink-soft);margin-top:14px;line-height:1.6}
+  /* ---- Historique ---- */
+  .histo-bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .histo-bar input{flex:1;min-width:180px;border:1px solid var(--line);border-radius:4px;padding:9px 12px;font-size:.88rem;font-family:'Public Sans',sans-serif;background:#fff;color:var(--ink)}
+  .histo-table{width:100%;border-collapse:collapse;font-size:.82rem}
+  .histo-table th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);padding:8px 8px;border-bottom:2px solid var(--ink)}
+  .histo-table td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .histo-table .nom{font-weight:700}
+  .histo-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .histo-actions button{background:none;border:1px solid var(--line);border-radius:4px;padding:5px 10px;cursor:pointer;font-size:.75rem;color:var(--ink);font-family:'Public Sans',sans-serif}
+  .histo-actions button:hover{border-color:var(--ink)}
+  .histo-actions button.del{color:var(--critique);border-color:var(--critique)}
+  .histo-empty{text-align:center;color:var(--ink-soft);font-size:.85rem;padding:22px}
+  .histo-note{font-size:.7rem;color:var(--ink-soft);margin-top:10px}
   .principes details{border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin-bottom:10px;background:#fff}
   .principes summary{cursor:pointer;font-weight:700;font-size:.92rem}
   .principes .txt{font-size:.85rem;color:var(--ink-soft);margin-top:10px;line-height:1.65}
@@ -113,11 +130,19 @@
   </header>
 
   <h1>Simulation DPAE &amp; revenus consultant</h1>
-  <p class="lede">Renseignez la date de début de prestation et le délai de paiement client : la simulation donne la DPAE, le début du CDI, puis toutes les échéances de revenus du consultant sur <strong>1 an</strong> (salaires, SEP et GPU). Le symbole ⚠️ signale un paiement à faire au consultant.</p>
+  <p class="lede">Renseignez le consultant, la date de début de prestation et le délai de paiement client : la simulation donne la DPAE, le début du CDI, puis toutes les échéances de revenus sur <strong>1 an</strong> (salaires, SEP et GPU). Le symbole ⚠️ signale un paiement à faire au consultant.</p>
 
   <div class="panel">
     <h2>Paramètres</h2>
-    <div class="inputs-grid">
+    <div class="inputs-grid four">
+      <div class="field">
+        <label for="prenomConsultant">Prénom du consultant</label>
+        <input type="text" id="prenomConsultant" placeholder="Ex. Brahim" />
+      </div>
+      <div class="field">
+        <label for="nomConsultant">Nom du consultant</label>
+        <input type="text" id="nomConsultant" placeholder="Ex. MOUNTASSIR" />
+      </div>
       <div class="field">
         <label for="debut">Date début prestation client</label>
         <input type="date" id="debut" value="2026-07-28" />
@@ -133,15 +158,25 @@
           <option value="90|calendaire">90 jours</option>
         </select>
       </div>
-      <div class="field">
-        <label for="nomConsultant">Nom du consultant (pour le rapport)</label>
-        <input type="text" id="nomConsultant" placeholder="Ex. Brahim MOUNTASSIR" />
-      </div>
     </div>
-    <button class="btn-dl" id="dlRapport">📄 Télécharger le rapport consultant (PDF)</button>
+    <div class="btn-row">
+      <button class="btn" id="saveSim">💾 Enregistrer la simulation</button>
+      <button class="btn ghost" id="dlRapport">📄 Télécharger le rapport consultant (PDF)</button>
+    </div>
   </div>
 
   <div id="output"></div>
+
+  <!-- ============ HISTORIQUE DES SIMULATIONS ============ -->
+  <div class="panel" style="margin-top:22px">
+    <div class="sec-title">Historique des simulations</div>
+    <div class="histo-bar">
+      <input type="text" id="histoSearch" placeholder="🔎 Rechercher un consultant…">
+      <button class="btn ghost" id="histoClear">🗑️ Tout effacer</button>
+    </div>
+    <div id="histoList"></div>
+    <p class="histo-note">💡 L'historique est enregistré sur cet ordinateur (navigateur). Chaque membre de l'équipe a son propre historique sur son poste.</p>
+  </div>
 
   <!-- ============ COMPRENDRE LES PRINCIPES ============ -->
   <div class="panel principes" style="margin-top:22px">
@@ -229,6 +264,7 @@ function tlRow(dotClass, emoji, date, label, sub, badge) {
 
 let calEvents = [];
 let calCur = null;
+let lastCalc = null; // dernières dates clés calculées (pour l'enregistrement)
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
 function renderCalendar() {
@@ -327,7 +363,7 @@ function render() {
     }
   }
 
-  // GPU : investissement dès le 1er du mois suivant le 1er revenu SEP, puis tous les versements trimestriels de l'année
+  // GPU : investissement dès le 1er du mois suivant le 1er revenu SEP, puis tous les versements trimestriels
   const investStart = new Date(sep1.getFullYear(), sep1.getMonth() + 1, 1);
   const qInvest = Math.floor(investStart.getMonth() / 3);
   events.push({ d: investStart, dot: 'dot-blue', cat: 'gpu', emoji: '🚀',
@@ -364,6 +400,7 @@ function render() {
 
   calEvents = events;
   calCur = new Date(dpaeLimit.getFullYear(), dpaeLimit.getMonth(), 1);
+  lastCalc = { dpae: dpaeLimit, cdi: debutCdi, sal1: endOfMonth(addMonths(debutCdi, 1)), sep1: sep1, gpu1: firstGpu.payout };
 
   document.getElementById('output').innerHTML = `
     <div class="dpae-banner">
@@ -444,16 +481,98 @@ document.getElementById('debut').addEventListener('input', render);
 document.getElementById('delai').addEventListener('change', render);
 render();
 
+/* ============ HISTORIQUE DES SIMULATIONS (enregistré sur ce poste) ============ */
+function getSims() { try { return JSON.parse(localStorage.getItem('lp_simulations') || '[]'); } catch(e) { return []; } }
+function setSims(list) { try { localStorage.setItem('lp_simulations', JSON.stringify(list)); } catch(e) { alert("Impossible d'enregistrer l'historique sur ce navigateur."); } }
+
+function renderHistorique() {
+  const filtre = (document.getElementById('histoSearch').value || '').toLowerCase();
+  const sims = getSims().filter(s => (s.prenom + ' ' + s.nom).toLowerCase().includes(filtre));
+  const box = document.getElementById('histoList');
+  if (!sims.length) {
+    box.innerHTML = '<div class="histo-empty">' + (filtre ? 'Aucune simulation ne correspond à cette recherche.' : 'Aucune simulation enregistrée pour l\u2019instant — remplissez les paramètres puis cliquez sur « 💾 Enregistrer la simulation ».') + '</div>';
+    return;
+  }
+  box.innerHTML = '<table class="histo-table"><thead><tr>' +
+    '<th>Consultant</th><th>Début presta</th><th>Délai</th><th>Début CDI</th><th>1er salaire</th><th>1er SEP</th><th>1er GPU</th><th>Enregistrée le</th><th>Actions</th>' +
+    '</tr></thead><tbody>' +
+    sims.map(s => '<tr>' +
+      '<td class="nom">' + esc(s.prenom + ' ' + s.nom) + '</td>' +
+      '<td>' + fmtShort(new Date(s.debut)) + '</td>' +
+      '<td>' + esc(s.delaiLabel) + '</td>' +
+      '<td>' + fmtShort(new Date(s.cdi)) + '</td>' +
+      '<td>' + fmtShort(new Date(s.sal1)) + '</td>' +
+      '<td>' + fmtShort(new Date(s.sep1)) + '</td>' +
+      '<td>' + fmtShort(new Date(s.gpu1)) + '</td>' +
+      '<td>' + fmtShort(new Date(s.ts)) + '</td>' +
+      '<td><div class="histo-actions">' +
+        '<button data-act="load" data-id="' + s.id + '">🔄 Recharger</button>' +
+        '<button data-act="pdf" data-id="' + s.id + '">📄 Rapport</button>' +
+        '<button data-act="del" data-id="' + s.id + '" class="del">🗑️</button>' +
+      '</div></td>' +
+    '</tr>').join('') +
+    '</tbody></table>';
+
+  box.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+    const sims2 = getSims();
+    const sim = sims2.find(x => x.id === btn.dataset.id);
+    if (!sim) return;
+    if (btn.dataset.act === 'del') {
+      if (confirm('Supprimer la simulation de ' + sim.prenom + ' ' + sim.nom + ' ?')) {
+        setSims(sims2.filter(x => x.id !== sim.id));
+        renderHistorique();
+      }
+      return;
+    }
+    // Recharger (et éventuellement générer le rapport)
+    document.getElementById('prenomConsultant').value = sim.prenom;
+    document.getElementById('nomConsultant').value = sim.nom;
+    document.getElementById('debut').value = sim.debut;
+    document.getElementById('delai').value = sim.delai;
+    render();
+    if (btn.dataset.act === 'pdf') { document.getElementById('dlRapport').click(); }
+    else { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }));
+}
+
+document.getElementById('saveSim').addEventListener('click', () => {
+  const prenom = document.getElementById('prenomConsultant').value.trim();
+  const nom = document.getElementById('nomConsultant').value.trim();
+  if (!prenom && !nom) { alert('Renseignez le prénom et le nom du consultant avant d\u2019enregistrer.'); return; }
+  if (!lastCalc) { alert('Renseignez d\u2019abord une date de début de prestation.'); return; }
+  const sims = getSims();
+  sims.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    ts: new Date().toISOString(),
+    prenom, nom,
+    debut: document.getElementById('debut').value,
+    delai: document.getElementById('delai').value,
+    delaiLabel: document.getElementById('delai').options[document.getElementById('delai').selectedIndex].text,
+    cdi: lastCalc.cdi.toISOString(), sal1: lastCalc.sal1.toISOString(),
+    sep1: lastCalc.sep1.toISOString(), gpu1: lastCalc.gpu1.toISOString()
+  });
+  setSims(sims);
+  renderHistorique();
+  document.getElementById('histoList').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+document.getElementById('histoSearch').addEventListener('input', renderHistorique);
+document.getElementById('histoClear').addEventListener('click', () => {
+  if (confirm('Effacer TOUT l\u2019historique des simulations de ce poste ?')) { setSims([]); renderHistorique(); }
+});
+renderHistorique();
+
 /* ============ RAPPORT CONSULTANT TÉLÉCHARGEABLE ============ */
 document.getElementById('dlRapport').addEventListener('click', () => {
-  const nom = document.getElementById('nomConsultant').value.trim() || 'Consultant';
+  const prenom = document.getElementById('prenomConsultant').value.trim();
+  const nomC = document.getElementById('nomConsultant').value.trim();
+  const nom = (prenom + ' ' + nomC).trim() || 'Consultant';
   const debutStr = fmtShort(new Date(document.getElementById('debut').value));
   const delaiStr = document.getElementById('delai').options[document.getElementById('delai').selectedIndex].text;
 
   const catNom = { adm: 'Administratif', sal: 'Salaire', sep: 'Revenu SEP (BNC)', gpu: 'Revenu GPU (BIC)', enc: 'Encaissement client' };
   const catCol = { adm: '#a02318', sal: '#8a6410', sep: '#3d6b35', gpu: '#2c4a6e', enc: '#5a5348' };
 
-  // Regrouper les échéances par mois
   const parMois = {};
   calEvents.forEach(e => {
     const key = e.d.getFullYear() + '-' + String(e.d.getMonth()).padStart(2, '0');
