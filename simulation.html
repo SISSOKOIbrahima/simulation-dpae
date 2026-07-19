@@ -36,6 +36,7 @@
   .btn{background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:11px 20px;font-family:'Public Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s}
   .btn:hover{opacity:.88}
   .btn.ghost{background:none;color:var(--ink);border:1px solid var(--ink)}
+  .btn.accent{background:var(--ok);color:#fff}
   .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
   .dpae-banner{background:var(--critique-bg);border:1px solid var(--critique);border-left:6px solid var(--critique);border-radius:6px;padding:18px 20px;margin-bottom:16px}
   .dpae-banner-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--critique);margin-bottom:4px}
@@ -47,13 +48,17 @@
   .metric-value{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:900}
   .metric-sub{font-size:.72rem;color:var(--ink-soft);margin-top:3px}
   .sec-title{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;border-bottom:2px solid var(--ink);padding-bottom:6px;margin:6px 0 14px}
-  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .legend span{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px}
-  .lg-sal{background:var(--warn-bg);color:var(--warn)}
-  .lg-sep{background:var(--ok-bg);color:var(--ok)}
-  .lg-gpu{background:var(--blue-bg);color:var(--blue)}
-  .lg-adm{background:var(--critique-bg);color:var(--critique)}
-  .lg-pay{background:var(--ink);color:var(--paper)}
+  /* ---- Filtres ---- */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+  .filters .flabel{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-right:2px}
+  .fchip{font-size:.72rem;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer;border:2px solid transparent;user-select:none;transition:opacity .12s}
+  .fchip.off{opacity:.32;border-color:var(--line)}
+  .fc-adm{background:var(--critique-bg);color:var(--critique)}
+  .fc-sal{background:var(--warn-bg);color:var(--warn)}
+  .fc-sep{background:var(--ok-bg);color:var(--ok)}
+  .fc-gpu{background:var(--blue-bg);color:var(--blue)}
+  .fc-enc{background:var(--paper);color:var(--ink-soft);border:1px dashed var(--line)}
+  .fc-pay{background:var(--ink);color:var(--paper)}
   .duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
   @media(max-width:900px){.duo{grid-template-columns:1fr}}
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -129,27 +134,27 @@
   </header>
 
   <h1>Simulation DPAE &amp; revenus consultant</h1>
-  <p class="lede">Renseignez le consultant, la date de début de prestation et le délai de paiement client : la simulation donne la DPAE, le début du CDI, puis toutes les échéances de revenus sur <strong>1 an</strong> (salaires, SEP et GPU). Le symbole ⚠️ signale un paiement à faire au consultant.</p>
+  <p class="lede">Renseignez le consultant, la date de début de prestation et le délai de paiement client, puis cliquez sur « Mettre à jour la simulation » : vous obtenez la DPAE, le début du CDI, et toutes les échéances de revenus sur <strong>1 an</strong> (salaires, SEP et GPU). Le symbole ⚠️ signale un paiement à faire au consultant.</p>
 
   <div class="panel">
     <h2>Paramètres</h2>
     <div class="inputs-grid four">
       <div class="field">
         <label for="prenomConsultant">Prénom du consultant</label>
-        <input type="text" id="prenomConsultant" placeholder="Ex. Brahim" />
+        <input type="text" id="prenomConsultant" placeholder="Ex. Wassila" />
       </div>
       <div class="field">
         <label for="nomConsultant">Nom du consultant</label>
-        <input type="text" id="nomConsultant" placeholder="Ex. MOUNTASSIR" />
+        <input type="text" id="nomConsultant" placeholder="Ex. BOUNAB" />
       </div>
       <div class="field">
         <label for="debut">Date début prestation client</label>
-        <input type="date" id="debut" value="2026-07-28" />
+        <input type="date" id="debut" value="2026-07-01" />
       </div>
       <div class="field">
         <label for="delai">Délai paiement client</label>
         <select id="delai">
-          <option value="30|calendaire">30 jours</option>
+          <option value="30|calendaire" selected>30 jours</option>
           <option value="30|fin_de_mois">30 jours fin de mois</option>
           <option value="45|calendaire">45 jours</option>
           <option value="45|fin_de_mois">45 jours fin de mois</option>
@@ -159,9 +164,11 @@
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn" id="saveSim">💾 Enregistrer la simulation</button>
+      <button class="btn accent" id="majSim">🔄 Mettre à jour la simulation</button>
+      <button class="btn" id="saveSim">💾 Enregistrer dans l'historique</button>
       <button class="btn ghost" id="dlRapport">📄 Télécharger le rapport consultant (PDF)</button>
     </div>
+    <p style="font-size:.7rem;color:var(--ink-soft);margin-top:8px">💡 « Mettre à jour » recalcule la simulation pour tester librement — rien n'est enregistré tant que vous ne cliquez pas sur « Enregistrer dans l'historique ».</p>
   </div>
 
   <div id="output"></div>
@@ -264,7 +271,11 @@ function tlRow(dotClass, emoji, date, label, sub, badge) {
 let calEvents = [];
 let calCur = null;
 let lastCalc = null;
+/* Filtres actifs (catégories affichées) */
+let activeFilters = { adm: true, sal: true, sep: true, gpu: true, enc: true };
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+function visibleEvents() { return calEvents.filter(e => activeFilters[e.cat]); }
 
 function renderCalendar() {
   if (!calCur) return;
@@ -272,10 +283,11 @@ function renderCalendar() {
   document.getElementById('calTitle').textContent = MOIS_FR[m] + ' ' + y;
   const first = (new Date(y, m, 1).getDay() + 6) % 7;
   const nb = endOfMonth(new Date(y, m, 1)).getDate();
+  const evsAll = visibleEvents();
   let html = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => '<div class="dow">' + d + '</div>').join('');
   for (let i = 0; i < first; i++) html += '<div class="day off"></div>';
   for (let d = 1; d <= nb; d++) {
-    const evs = calEvents.filter(e => e.d.getFullYear() === y && e.d.getMonth() === m && e.d.getDate() === d);
+    const evs = evsAll.filter(e => e.d.getFullYear() === y && e.d.getMonth() === m && e.d.getDate() === d);
     html += '<div class="day"><span class="n">' + d + '</span>' +
       evs.map(e =>
         '<span class="ev ' + e.cat + '">' + (e.pay ? '⚠️ ' : '') + esc(e.court) + ' <span class="i">ⓘ</span>' +
@@ -284,6 +296,27 @@ function renderCalendar() {
       '</div>';
   }
   document.getElementById('cal').innerHTML = html;
+}
+
+function renderTimeline() {
+  const box = document.getElementById('tlBox');
+  if (!box) return;
+  const evs = visibleEvents();
+  box.innerHTML = evs.length
+    ? evs.map(e => tlRow(e.dot, (e.pay ? '⚠️' : e.emoji), e.d, (e.pay ? '⚠️ ' : '') + e.label, e.sub, e.badge)).join('')
+    : '<div class="histo-empty">Aucune échéance pour les filtres sélectionnés.</div>';
+}
+
+function bindFilters() {
+  document.querySelectorAll('.fchip[data-cat]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cat = chip.dataset.cat;
+      activeFilters[cat] = !activeFilters[cat];
+      chip.classList.toggle('off', !activeFilters[cat]);
+      renderCalendar();
+      renderTimeline();
+    });
+  });
 }
 
 function render() {
@@ -446,12 +479,14 @@ function render() {
       </div>
     </div>
 
-    <div class="legend">
-      <span class="lg-adm">● Administratif</span>
-      <span class="lg-sal">● Salaire</span>
-      <span class="lg-sep">● Revenu SEP (BNC)</span>
-      <span class="lg-gpu">● Revenu GPU (BIC)</span>
-      <span class="lg-pay">⚠️ Paiement à faire au consultant</span>
+    <div class="filters">
+      <span class="flabel">Filtres :</span>
+      <span class="fchip fc-adm ${activeFilters.adm ? '' : 'off'}" data-cat="adm">● Administratif</span>
+      <span class="fchip fc-sal ${activeFilters.sal ? '' : 'off'}" data-cat="sal">● Salaire</span>
+      <span class="fchip fc-sep ${activeFilters.sep ? '' : 'off'}" data-cat="sep">● Revenu SEP (BNC)</span>
+      <span class="fchip fc-gpu ${activeFilters.gpu ? '' : 'off'}" data-cat="gpu">● Revenu GPU (BIC)</span>
+      <span class="fchip fc-enc ${activeFilters.enc ? '' : 'off'}" data-cat="enc">● Encaissements client</span>
+      <span class="fchip fc-pay" style="cursor:default">⚠️ Paiement à faire au consultant</span>
     </div>
 
     <div class="duo">
@@ -463,15 +498,13 @@ function render() {
           <button id="calNext">▶</button>
         </div>
         <div class="cal" id="cal"></div>
-        <p class="cal-hint">Faites défiler les mois avec ◀ ▶ — survolez une étiquette ⓘ pour l'explication complète. ⚠️ = paiement à faire au consultant.</p>
+        <p class="cal-hint">Faites défiler les mois avec ◀ ▶ — cliquez sur un filtre pour masquer/afficher une catégorie, survolez une étiquette ⓘ pour l'explication. ⚠️ = paiement à faire au consultant.</p>
       </div>
 
       <div class="panel">
         <div class="sec-title">Échéancier détaillé sur 1 an</div>
         <div class="tl-scroll">
-          <div class="timeline">
-            ${events.map(e => tlRow(e.dot, (e.pay ? '⚠️' : e.emoji), e.d, (e.pay ? '⚠️ ' : '') + e.label, e.sub, e.badge)).join('')}
-          </div>
+          <div class="timeline" id="tlBox"></div>
         </div>
       </div>
     </div>
@@ -488,11 +521,13 @@ function render() {
 
   document.getElementById('calPrev').addEventListener('click', () => { calCur = addMonths(calCur, -1); renderCalendar(); });
   document.getElementById('calNext').addEventListener('click', () => { calCur = addMonths(calCur, 1); renderCalendar(); });
+  bindFilters();
   renderCalendar();
+  renderTimeline();
 }
 
-document.getElementById('debut').addEventListener('input', render);
-document.getElementById('delai').addEventListener('change', render);
+/* Mise à jour uniquement au clic sur le bouton (pour tester librement) */
+document.getElementById('majSim').addEventListener('click', render);
 render();
 
 /* ============ HISTORIQUE DES SIMULATIONS (enregistré sur ce poste) ============ */
@@ -504,7 +539,7 @@ function renderHistorique() {
   const sims = getSims().filter(s => (s.prenom + ' ' + s.nom).toLowerCase().includes(filtre));
   const box = document.getElementById('histoList');
   if (!sims.length) {
-    box.innerHTML = '<div class="histo-empty">' + (filtre ? 'Aucune simulation ne correspond à cette recherche.' : 'Aucune simulation enregistrée pour l\u2019instant — remplissez les paramètres puis cliquez sur « 💾 Enregistrer la simulation ».') + '</div>';
+    box.innerHTML = '<div class="histo-empty">' + (filtre ? 'Aucune simulation ne correspond à cette recherche.' : 'Aucune simulation enregistrée pour l\u2019instant — remplissez les paramètres puis cliquez sur « 💾 Enregistrer dans l\u2019historique ».') + '</div>';
     return;
   }
   box.innerHTML = '<table class="histo-table"><thead><tr>' +
@@ -552,6 +587,7 @@ document.getElementById('saveSim').addEventListener('click', () => {
   const prenom = document.getElementById('prenomConsultant').value.trim();
   const nom = document.getElementById('nomConsultant').value.trim();
   if (!prenom && !nom) { alert('Renseignez le prénom et le nom du consultant avant d\u2019enregistrer.'); return; }
+  render(); // s'assurer que la simulation correspond aux paramètres affichés
   if (!lastCalc) { alert('Renseignez d\u2019abord une date de début de prestation.'); return; }
   const sims = getSims();
   sims.unshift({
@@ -577,6 +613,7 @@ renderHistorique();
 
 /* ============ RAPPORT CONSULTANT TÉLÉCHARGEABLE ============ */
 document.getElementById('dlRapport').addEventListener('click', () => {
+  render(); // s'assurer que le rapport correspond aux paramètres affichés
   const prenom = document.getElementById('prenomConsultant').value.trim();
   const nomC = document.getElementById('nomConsultant').value.trim();
   const nom = (prenom + ' ' + nomC).trim() || 'Consultant';
