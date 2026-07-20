@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Launchpad — Outils internes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241b12; --ink-soft:#4a3d2e; --paper:#f6f2ea; --card:#fffdf8;
+    --line:#d8cfc0; --accent:#3d6b35;
+    --social:#a02318; --factu:#3d6b35; --livr:#8a6410;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Public Sans',sans-serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column}
+
+  /* ---- Barre de navigation ---- */
+  .topbar{background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:24px;padding:0 22px;flex-wrap:wrap}
+  .wordmark{font-family:'Fraunces',serif;font-weight:900;font-size:1.1rem;letter-spacing:.05em;padding:14px 0}
+  .wordmark span{font-weight:500;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;opacity:.75;margin-left:10px}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav a{color:var(--paper);text-decoration:none;font-size:.85rem;font-weight:600;padding:16px 14px;border-bottom:3px solid transparent;opacity:.8;transition:opacity .15s}
+  nav a:hover{opacity:1}
+  nav a.active{opacity:1;border-bottom-color:var(--paper)}
+
+  /* ---- Vues ---- */
+  .view{display:none;flex:1;min-height:0}
+  .view.active{display:flex;flex-direction:column}
+  .frame{flex:1;width:100%;border:none;background:var(--paper)}
+
+  /* ---- Accueil ---- */
+  #view-accueil{overflow:auto}
+  .home{max-width:960px;margin:0 auto;padding:48px 24px 80px;width:100%}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(1.7rem,3.5vw,2.4rem);margin-bottom:8px}
+  .lede{color:var(--ink-soft);max-width:620px;margin-bottom:36px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:22px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:8px;transition:transform .12s,box-shadow .12s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(36,27,18,.08)}
+  .card .icon{font-size:1.6rem}
+  .card h2{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700}
+  .card p{font-size:.85rem;color:var(--ink-soft);line-height:1.5}
+  .card .go{margin-top:auto;font-size:.78rem;font-weight:700;color:var(--accent)}
+  .card.soon{opacity:.55;cursor:default}
+  .card.soon:hover{transform:none;box-shadow:none}
+  .card.soon .go{color:var(--ink-soft)}
+
+  /* ---- Tableau de bord : prochaines échéances ---- */
+  .dash{display:none;margin-top:38px}
+  .dash-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:14px}
+  .dash-head h2{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700}
+  .dash-head a{font-size:.78rem;font-weight:700;color:var(--accent);text-decoration:none}
+  .dash-head a:hover{text-decoration:underline}
+  .ups{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+  .up{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:6px;padding:12px 14px}
+  .up.social{border-left-color:var(--social)}
+  .up.factu{border-left-color:var(--factu)}
+  .up.livr{border-left-color:var(--livr)}
+  .up .when{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+  .up .date{font-family:'Fraunces',serif;font-weight:900;font-size:1.05rem}
+  .up .badge{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+  .up .badge.urgent{color:var(--social)}
+  .up .titre{font-size:.84rem;font-weight:600;line-height:1.35}
+  .up .note{font-size:.72rem;color:var(--ink-soft);margin-top:3px;line-height:1.4}
+  footer{padding:14px 24px;font-size:.72rem;color:var(--ink-soft);text-align:center;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wordmark">LAUNCHPAD<span>Outils internes</span></div>
+  <nav>
+    <a href="#accueil" data-view="accueil" class="active">Accueil</a>
+    <a href="#simulation" data-view="simulation">Simulation DPAE</a>
+    <a href="#revue" data-view="revue">Revue contractuelle</a>
+    <a href="#dates" data-view="dates">Dates importantes</a>
+    <a href="#faq" data-view="faq">Assistant FAQ</a>
+    <a href="#integration" data-view="integration">Intégration</a>
+  </nav>
+</div>
+
+<!-- Accueil -->
+<div class="view active" id="view-accueil">
+  <div class="home">
+    <h1>Outils internes Launchpad</h1>
+    <p class="lede">Les outils du quotidien pour l'équipe : simulation des délais, vérification des contrats avant signature, échéancier mensuel, assistant FAQ, intégration des salariés, et bientôt plus.</p>
+    <div class="cards">
+      <a class="card" href="#simulation">
+        <div class="icon">📅</div>
+        <h2>Simulation DPAE</h2>
+        <p>Calculer les échéances DPAE et visualiser les délais de paiement (30 j, 45 j, 45 j fin de mois, 60 j) pour planifier les embauches et la facturation.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
+      <a class="card" href="#revue">
+        <div class="icon">📋</div>
+        <h2>Revue contractuelle</h2>
+        <p>Analyse IA des contrats clients avant signature : TJM, délais de paiement, facturation, détection de clauses abusives et mentions de portage salarial.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
+      <a class="card" href="#dates">
+        <div class="icon">🗓️</div>
+        <h2>Dates importantes</h2>
+        <p>L'échéancier mensuel : organismes sociaux (DSN, URSSAF, AGIRC-ARRCO, AXA), facturation SEP / GPU / salaires, et livrables consultants avec explications.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
+      <a class="card" href="#faq">
+        <div class="icon">💬</div>
+        <h2>Assistant FAQ</h2>
+        <p>Pose n'importe quelle question sur les procédures internes : DPAE, onboarding, contrats, DC4, circuit de facturation… l'assistant IA répond immédiatement.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
+      <a class="card" href="#integration">
+        <div class="icon">🎓</div>
+        <h2>Intégration</h2>
+        <p>Le parcours d'intégration des nouveaux salariés : vidéos tutorielles (Payfit, mutuelle AXA, médecine du travail Ostra…) et checklist des étapes à suivre.</p>
+        <div class="go">Ouvrir →</div>
+      </a>
+      <div class="card soon">
+        <div class="icon">🧰</div>
+        <h2>Prochainement</h2>
+        <p>D'autres rubriques viendront s'ajouter ici (générateur d'emails de négociation, comparaison de versions de contrats…).</p>
+        <div class="go">Bientôt disponible</div>
+      </div>
+    </div>
+
+    <!-- Tableau de bord : prochaines échéances (alimenté automatiquement par dates.html) -->
+    <div class="dash" id="dash">
+      <div class="dash-head">
+        <h2>⏳ Prochaines échéances</h2>
+        <a href="#dates">Voir tout le calendrier →</a>
+      </div>
+      <div class="ups" id="ups"></div>
+    </div>
+  </div>
+  <footer>Usage interne — SAS Launchpad, Saint-Germain-en-Laye</footer>
+</div>
+
+<!-- Simulation DPAE -->
+<div class="view" id="view-simulation">
+  <iframe class="frame" id="frame-simulation" data-src="simulation.html" title="Simulation DPAE"></iframe>
+</div>
+
+<!-- Revue contractuelle -->
+<div class="view" id="view-revue">
+  <iframe class="frame" id="frame-revue" data-src="revue-contractuelle.html" title="Revue contractuelle"></iframe>
+</div>
+
+<!-- Dates importantes -->
+<div class="view" id="view-dates">
+  <iframe class="frame" id="frame-dates" data-src="dates.html" title="Dates importantes"></iframe>
+</div>
+
+<!-- Assistant FAQ -->
+<div class="view" id="view-faq">
+  <iframe class="frame" id="frame-faq" data-src="faq.html" title="Assistant FAQ"></iframe>
+</div>
+
+<!-- Intégration -->
+<div class="view" id="view-integration">
+  <iframe class="frame" id="frame-integration" data-src="integration.html" title="Intégration"></iframe>
+</div>
+
+<script>
+  /* ---- Navigation ---- */
+  const links = document.querySelectorAll('nav a');
+  function show(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    links.forEach(a => a.classList.toggle('active', a.dataset.view === name));
+    const view = document.getElementById('view-' + name);
+    if (!view) return show('accueil');
+    view.classList.add('active');
+    const frame = view.querySelector('iframe');
+    if (frame && !frame.src) frame.src = frame.dataset.src;
+  }
+  function route(){ show((location.hash || '#accueil').slice(1)); }
+  window.addEventListener('hashchange', route);
+  route();
+
+  /* ---- Tableau de bord : lit les échéances directement dans dates.html ----
+     Une seule source de vérité : modifie les dates dans dates.html,
+     l'accueil se met à jour automatiquement. */
+  (async function loadDash() {
+    try {
+      const res = await fetch('dates.html');
+      const html = await res.text();
+      const m = html.match(/const EVENTS = \[[\s\S]*?\n\];/);
+      if (!m) return;
+      const EVENTS = new Function(m[0] + ' return EVENTS;')();
+
+      const lastDay = (y, mo) => new Date(y, mo + 1, 0).getDate();
+      const resolve = (ev, y, mo) => ev.jour === 'fin' ? lastDay(y, mo) : Math.min(ev.jour, lastDay(y, mo));
+      const MOIS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const items = [];
+      for (let off = 0; off < 2; off++) {
+        const d0 = new Date(today.getFullYear(), today.getMonth() + off, 1);
+        EVENTS.forEach(ev => {
+          const d = new Date(d0.getFullYear(), d0.getMonth(), resolve(ev, d0.getFullYear(), d0.getMonth()));
+          if (d >= today) items.push({ ...ev, d });
+        });
+      }
+      items.sort((a, b) => a.d - b.d);
+
+      const esc = s => { const el = document.createElement('div'); el.textContent = s ?? ''; return el.innerHTML; };
+      document.getElementById('ups').innerHTML = items.slice(0, 4).map(it => {
+        const j = Math.round((it.d - today) / 86400000);
+        const badge = j === 0 ? "aujourd'hui" : j === 1 ? 'demain' : 'dans ' + j + ' j';
+        return '<div class="up ' + it.cat + '">' +
+          '<div class="when"><span class="date">' + it.d.getDate() + ' ' + MOIS[it.d.getMonth()] + '</span>' +
+          '<span class="badge' + (j <= 2 ? ' urgent' : '') + '">' + badge + '</span></div>' +
+          '<div class="titre">' + esc(it.titre) + '</div>' +
+          '<div class="note">' + esc(it.note) + '</div></div>';
+      }).join('');
+      if (items.length) document.getElementById('dash').style.display = 'block';
+    } catch (e) { /* si dates.html est absent, on masque simplement le bloc */ }
+  })();
+</script>
+</body>
+</html>
